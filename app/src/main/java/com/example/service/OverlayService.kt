@@ -124,19 +124,27 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
             .setPriority(Notification.PRIORITY_LOW)
             .build()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= 34) { // Build.VERSION_CODES.UPSIDE_DOWN_CAKE is 34
             try {
                 startForeground(
                     NOTIFICATION_ID,
                     notification,
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
                 )
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 Log.e(TAG, "Failed startForeground with type SPECIAL_USE, falling back", e)
-                startForeground(NOTIFICATION_ID, notification)
+                try {
+                    startForeground(NOTIFICATION_ID, notification)
+                } catch (t: Throwable) {
+                    Log.e(TAG, "Failed all startForeground attempts", t)
+                }
             }
         } else {
-            startForeground(NOTIFICATION_ID, notification)
+            try {
+                startForeground(NOTIFICATION_ID, notification)
+            } catch (e: Throwable) {
+                Log.e(TAG, "Failed startForeground on pre-34 platform", e)
+            }
         }
     }
 
