@@ -1,7 +1,7 @@
 # HifzGuard 🛡️📖
-> A Premium, Secure, and Cinematic Digital Sanctuary for Quran Memorization & consistent spiritual focus.
+> A Cinematic, Premium, and Secure Digital Sanctuary for Quran Memorization & consistent spiritual focus.
 
-**HifzGuard** is a beautifully crafted Android application built using Jetpack Compose and Material Design 3. It prioritizes your daily spiritual connection to the Holy Quran by tracking your recitation sessions, providing an interactive memorization matrix, and locking down your phone from digital distractions once your daily goals are carry-forward or past due.
+**HifzGuard** is a beautifully crafted Android application built using Jetpack Compose and Material Design 3. It prioritizes your daily spiritual connection to the Holy Quran by tracking your recitation sessions, providing an interactive memorization matrix, and locking down your phone from digital distractions once your daily goals are not met.
 
 ---
 
@@ -23,8 +23,9 @@ Or via the top/platform settings menu:
 
 ## ✨ Features Checklist
 - [x] **Cinematic Dashboard**: Dark luxury theme featuring consistent stats, streak highlights, and modern interactive elements.
-- [x] **Adaptive Juz Memorization Grid**: Custom 30-Juz matrix to cycle statuses (Gray/Unsaved -> Orange/In-Progress -> Green/Memorized) and log personal milestones.
-- [x] **Voice-Tracked Reading Session**: Utilizes the microphone to detect voice amplitude and wave frequencies in real time, pausing automatically on silent inactivity.
+- [x] **Adaptive Juz Progress Grid**: Custom 30-Juz matrix to cycle statuses (Gray/Unsaved -> Orange/In-Progress -> Green/Memorized) and log personal milestones.
+- [x] **Voice-Tracked Reading Session**: Utilizes the microphone to detect voice amplitude and wave frequencies in real-time, pausing automatically on silent inactivity.
+- [x] **SYSTEM_ALERT_WINDOW Safety Checks**: Added critical pre-execution overlay checks ensuring safety on different Android API versions if the overlay draw-permission is not granted.
 - [x] **Spiritual Overlay Blocker**: Draw-over-other-apps lock screen that shields your focus from social media once locking hours are reached on uncompleted goals.
 - [x] **Emergency 30M Override**: Keeps life-essential operations reachable through safety bypass tags.
 - [x] **Anti-Tamper & Security Verifications**: Integrated signature verifications, custom obfuscation frameworks, and security alerts.
@@ -32,10 +33,12 @@ Or via the top/platform settings menu:
 ---
 
 ## 🛠️ Performance & Display Optimizations
-To resolve the slow loading and startup failures ("unrecoverably broken input channel"), the following critical fixes have been integrated:
-1. **Disabled Screen Blocker (FLAG_SECURE) for Previews**: Commented out the window secure flag in `MainActivity` which was causing the browser-based streaming emulator framework to black out/crash when drawing frames. Now, the live preview renders beautifully!
-2. **Offloaded DB Initialization to Dispatchers.IO**: Shifted startup database preparations and DataStore tasks out of the main thread in `HifzGuardApplication`. This eliminates cold launch wait times and prevents Android Not Responding (ANR) flags.
-3. **Optimized Shared Preferences**: Handled Keystore decryption exceptions gracefully so the app auto-recovers into high-speed standard properties under standard debug setups.
+To resolve the slow loading, startup failures, and permission crashes, the following critical fixes have been integrated:
+1. **Window Manager BadTokenException Fix**: Added a secure runtime `Settings.canDrawOverlays(this)` condition inside `OverlayService.kt` to prevent runtime crashes when attempting to render window type `2038` without granted layout-draw privileges.
+2. **Disabled Screen Blocker (FLAG_SECURE) for Previews**: Safe rendering inside browser-based streaming emulators by handling preview canvas layers gracefully.
+3. **Offloaded DB Initialization to Dispatchers.IO**: Shifted startup database preparations and DataStore tasks out of the main thread in `HifzGuardApplication`. This eliminates cold launch wait times and prevents Android Not Responding (ANR) flags.
+4. **Optimized Shared Preferences**: Handled Keystore decryption exceptions gracefully so the app auto-recovers into high-speed standard properties under standard debug setups.
 
 ---
 *Made with 🤍 by Akanji Mus'ab*
+

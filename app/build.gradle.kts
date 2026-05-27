@@ -140,6 +140,34 @@ dependencies {
   // "ksp"(libs.moshi.kotlin.codegen)
 }
 
+val buildDirObj = layout.buildDirectory.asFile.get()
+val rootDirObj = rootDir
+
+tasks.register("copyApkToRoot") {
+    val srcFile = File(buildDirObj, "outputs/apk/debug/app-debug.apk")
+    val destFile = File(rootDirObj, "app-debug.apk")
+    
+    inputs.file(srcFile).optional()
+    outputs.file(destFile)
+    
+    doLast {
+        if (srcFile.exists()) {
+            srcFile.copyTo(destFile, overwrite = true)
+            println("=== SUCCESS: Compiled APK copied programmatically to root at ${destFile.absolutePath} ===")
+        } else {
+            println("=== WARNING: Compiled APK was not found at ${srcFile.absolutePath} ===")
+        }
+    }
+}
+
+tasks.matching { it.name == "assembleDebug" }.all {
+    finalizedBy("copyApkToRoot")
+}
+
+
+
+
+
 
 
 
