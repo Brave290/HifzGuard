@@ -9,8 +9,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -106,7 +106,7 @@ fun DashboardScreen(
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Star,
+                        imageVector = Icons.Default.Whatshot,
                         contentDescription = "Streak",
                         tint = if (streak > 0) Color(0xFFE67E22) else Color.Gray,
                         modifier = Modifier.size(24.dp)
@@ -151,7 +151,7 @@ fun DashboardScreen(
 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            imageVector = if (isGoalCompleted) Icons.Default.Check else Icons.Default.Lock,
+                            imageVector = if (isGoalCompleted) Icons.Default.LockOpen else Icons.Default.Lock,
                             contentDescription = "Lock",
                             tint = if (isGoalCompleted) StatusCompleted else GoldAccent,
                             modifier = Modifier.size(36.dp)

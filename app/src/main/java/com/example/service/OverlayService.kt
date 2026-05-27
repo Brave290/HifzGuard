@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -281,7 +282,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                                 .border(1.5.dp, Color(0xFFD4AF37), CircleShape)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Lock,
+                                imageVector = Icons.Default.MenuBook,
                                 contentDescription = "Quran",
                                 tint = Color(0xFFD4AF37),
                                 modifier = Modifier.size(56.dp)

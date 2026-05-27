@@ -11,7 +11,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.*
@@ -158,7 +159,7 @@ fun SessionScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Info,
+                        imageVector = Icons.Default.Mic,
                         contentDescription = "Voice Input Indicator",
                         tint = GoldAccent,
                         modifier = Modifier.size(18.dp)
@@ -272,7 +273,7 @@ fun SessionScreen(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Icon(
-                            imageVector = if (isSessionActive) Icons.Default.Close else Icons.Default.PlayArrow,
+                            imageVector = if (isSessionActive) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = "Playback Control"
                         )
                         Spacer(modifier = Modifier.width(8.dp))

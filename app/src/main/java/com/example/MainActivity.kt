@@ -19,11 +19,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.HeadsetMic
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -189,7 +189,7 @@ fun MainNavigationScaffold(
                     NavigationBarItem(
                         selected = currentScreen == HifzScreen.Dashboard,
                         onClick = { currentScreen = HifzScreen.Dashboard },
-                        icon = { Icon(Icons.Default.Home, contentDescription = "Dashboard") },
+                        icon = { Icon(Icons.Default.Dashboard, contentDescription = "Dashboard") },
                         label = { Text("Dashboard") },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = GoldAccent,
@@ -203,7 +203,7 @@ fun MainNavigationScaffold(
                     NavigationBarItem(
                         selected = currentScreen == HifzScreen.JuzGrid,
                         onClick = { currentScreen = HifzScreen.JuzGrid },
-                        icon = { Icon(Icons.Default.List, contentDescription = "Juz Progress") },
+                        icon = { Icon(Icons.Default.GridOn, contentDescription = "Juz Progress") },
                         label = { Text("Juz Progress") },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = GoldAccent,
@@ -217,7 +217,7 @@ fun MainNavigationScaffold(
                     NavigationBarItem(
                         selected = currentScreen == HifzScreen.Statistics,
                         onClick = { currentScreen = HifzScreen.Statistics },
-                        icon = { Icon(Icons.Default.Star, contentDescription = "Statistics") },
+                        icon = { Icon(Icons.Default.Analytics, contentDescription = "Statistics") },
                         label = { Text("Statistics") },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = GoldAccent,
@@ -329,7 +329,7 @@ fun MainNavigationScaffold(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Default.Warning, contentDescription = "Root warning", tint = GoldAccent)
+                            Icon(imageVector = Icons.Default.HeadsetMic, contentDescription = "Root warning", tint = GoldAccent)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "Root Access Detected",
@@ -366,7 +366,7 @@ fun TamperedBlockerUI() {
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
-                imageVector = Icons.Default.Lock,
+                imageVector = Icons.Default.Security,
                 contentDescription = "Tamper Lock",
                 tint = Color(0xFFC0392B),
                 modifier = Modifier.size(72.dp)
