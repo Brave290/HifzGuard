@@ -180,15 +180,8 @@ fun JuzGridScreen(
                             .combinedClickable(
                                 onClick = { viewModel.cycleJuzStatus(juzNum) },
                                 onLongClick = {
-                                    // Long press resets to unmemorized (Status 0)
-                                    viewModel.cycleJuzStatus(juzNum) // Cycle to next or let's reset status to 0
-                                    // Let's cycle directly back to 0
-                                    if (currentStatus != 0) {
-                                        viewModel.cycleJuzStatus(juzNum)
-                                        if (currentStatus == 1) {
-                                            viewModel.cycleJuzStatus(juzNum) // cycle twice to loop through status transitions
-                                        }
-                                    }
+                                    // Long press resets/clears that individual Juz' status to unmemorized (0)
+                                    viewModel.setJuzStatus(juzNum, 0)
                                 }
                             )
                     ) {
@@ -205,7 +198,7 @@ fun JuzGridScreen(
         }
 
         Text(
-            text = "Tip: Tap a Juz box to cycle through statuses. Long-press to reset.",
+            text = "Tip: Tap a Juz box to cycle statuses. Long-press to clear/reset a single Juz.",
             style = MaterialTheme.typography.labelSmall,
             color = Color.White.copy(alpha = 0.5f),
             textAlign = TextAlign.Center,

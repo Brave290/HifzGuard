@@ -174,6 +174,12 @@ class HifzViewModel(
         }
     }
 
+    fun setJuzStatus(juzNumber: Int, status: Int) {
+        viewModelScope.launch {
+            juzProgressRepository.updateProgress(JuzProgress(juzNumber, status))
+        }
+    }
+
     fun resetAllJuz() {
         viewModelScope.launch {
             juzProgressRepository.resetAll()
