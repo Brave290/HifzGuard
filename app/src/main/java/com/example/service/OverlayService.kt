@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -219,6 +218,11 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
 
     @SuppressLint("InflateParams")
     private fun showLockOverlay(remainingMinutes: Int) {
+        if (!android.provider.Settings.canDrawOverlays(this)) {
+            Log.w(TAG, "Cannot show lock overlay: SYSTEM_ALERT_WINDOW permission is not granted.")
+            return
+        }
+
         if (isOverlayAttached && overlayView != null) {
             // Already attached, update content dynamically if needed.
             // Under compose, updating state triggers recomposition automatically.
@@ -277,7 +281,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                                 .border(1.5.dp, Color(0xFFD4AF37), CircleShape)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.MenuBook,
+                                imageVector = Icons.Default.Lock,
                                 contentDescription = "Quran",
                                 tint = Color(0xFFD4AF37),
                                 modifier = Modifier.size(56.dp)
