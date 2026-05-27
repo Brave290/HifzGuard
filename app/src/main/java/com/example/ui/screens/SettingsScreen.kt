@@ -64,6 +64,25 @@ fun SettingsScreen(
     var consequenceEnabledState by remember { mutableStateOf(isConsequenceByMsg) }
     var messageInput by remember { mutableStateOf(customTemplateMessage) }
 
+    LaunchedEffect(currentGoalMinutes) {
+        goalInput = currentGoalMinutes.toString()
+    }
+    LaunchedEffect(thresholdHour) {
+        hourInput = thresholdHour.toString()
+    }
+    LaunchedEffect(thresholdMinute) {
+        minInput = thresholdMinute.toString()
+    }
+    LaunchedEffect(phoneNum) {
+        phoneInput = phoneNum
+    }
+    LaunchedEffect(isConsequenceByMsg) {
+        consequenceEnabledState = isConsequenceByMsg
+    }
+    LaunchedEffect(customTemplateMessage) {
+        messageInput = customTemplateMessage
+    }
+
     // Version Easter Egg click counter
     var versionClicks by remember { mutableStateOf(0) }
 
@@ -129,58 +148,127 @@ fun SettingsScreen(
 
         // Section B: Lock Threshold Time Pickers (past 8 PM etc.)
         SectionCard(title = "Lock Threshold Time") {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Schedule,
-                    contentDescription = "Schedule",
-                    tint = GoldAccent
-                )
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                
+                // Visual feedback card with AM/PM formatted presentation & Select Time Picker Trigger
+                val amPm = if (thresholdHour >= 12) "PM" else "AM"
+                val displayHour = when {
+                    thresholdHour == 0 -> 12
+                    thresholdHour > 12 -> thresholdHour - 12
+                    else -> thresholdHour
+                }
+                val displayMinute = String.format(Locale.getDefault(), "%02d", thresholdMinute)
+                val formattedTime = "$displayHour:$displayMinute $amPm"
 
-                // Hour
-                OutlinedTextField(
-                    value = hourInput,
-                    onValueChange = {
-                        hourInput = it
-                        val intVal = it.toIntOrNull()
-                        if (intVal != null && intVal in 0..23) {
-                            viewModel.setLockThreshold(intVal, minInput.toIntOrNull() ?: 0)
-                        }
-                    },
-                    label = { Text("Hour (0-23)", color = Color.White.copy(alpha = 0.6f)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f).testTag("lock_hour_input"),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = GoldAccent,
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.2f)
-                    )
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White.copy(alpha = 0.04f))
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "ACTIVE LOCK TIME",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            ),
+                            color = Color.White.copy(alpha = 0.4f)
+                        )
+                        Text(
+                            text = formattedTime,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            ),
+                            color = GoldAccent
+                        )
+                    }
 
-                // Minute
-                OutlinedTextField(
-                    value = minInput,
-                    onValueChange = {
-                        minInput = it
-                        val intVal = it.toIntOrNull()
-                        if (intVal != null && intVal in 0..59) {
-                            viewModel.setLockThreshold(hourInput.toIntOrNull() ?: 20, intVal)
-                        }
-                    },
-                    label = { Text("Minute (0-59)", color = Color.White.copy(alpha = 0.6f)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f).testTag("lock_minute_input"),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = GoldAccent,
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.2f)
+                    Button(
+                        onClick = {
+                            val picker = android.app.TimePickerDialog(
+                                context,
+                                { _, pickedHour, pickedMinute ->
+                                    viewModel.setLockThreshold(pickedHour, pickedMinute)
+                                    hourInput = pickedHour.toString()
+                                    minInput = pickedMinute.toString()
+                                },
+                                thresholdHour,
+                                thresholdMinute,
+                                false // 12-hour format
+                            )
+                            picker.show()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = GoldAccent.copy(alpha = 0.15f),
+                            contentColor = GoldAccent
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, GoldAccent.copy(alpha = 0.4f)),
+                        modifier = Modifier.testTag("time_picker_trigger")
+                    ) {
+                        Text("SELECT TIME", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                    }
+                }
+
+                // Quick manual text fields below for precise entries
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Schedule,
+                        contentDescription = "Schedule",
+                        tint = GoldAccent
                     )
-                )
+
+                    // Hour
+                    OutlinedTextField(
+                        value = hourInput,
+                        onValueChange = {
+                            hourInput = it
+                            val intVal = it.toIntOrNull()
+                            if (intVal != null && intVal in 0..23) {
+                                viewModel.setLockThreshold(intVal, minInput.toIntOrNull() ?: 0)
+                            }
+                        },
+                        label = { Text("Hour (0-23)", color = Color.White.copy(alpha = 0.6f)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f).testTag("lock_hour_input"),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = GoldAccent,
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.2f)
+                        )
+                    )
+
+                    // Minute
+                    OutlinedTextField(
+                        value = minInput,
+                        onValueChange = {
+                            minInput = it
+                            val intVal = it.toIntOrNull()
+                            if (intVal != null && intVal in 0..59) {
+                                viewModel.setLockThreshold(hourInput.toIntOrNull() ?: 20, intVal)
+                            }
+                        },
+                        label = { Text("Minute (0-59)", color = Color.White.copy(alpha = 0.6f)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f).testTag("lock_minute_input"),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = GoldAccent,
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.2f)
+                        )
+                    )
+                }
             }
         }
 
