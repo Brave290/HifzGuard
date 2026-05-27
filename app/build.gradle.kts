@@ -120,3 +120,31 @@ dependencies {
   "ksp"(libs.androidx.room.compiler)
   "ksp"(libs.moshi.kotlin.codegen)
 }
+
+abstract class CopyApkTask : DefaultTask() {
+    @get:org.gradle.api.tasks.InputFile
+    abstract val sourceApk: org.gradle.api.file.RegularFileProperty
+
+    @get:org.gradle.api.tasks.OutputFile
+    abstract val destApk: org.gradle.api.file.RegularFileProperty
+
+    @org.gradle.api.tasks.TaskAction
+    fun run() {
+        val src = sourceApk.get().asFile
+        val dest = destApk.get().asFile
+        if (src.exists()) {
+            src.copyTo(dest, overwrite = true)
+            println("Successfully copied APK to project root: ${dest.absolutePath}")
+        }
+    }
+}
+
+tasks.register<CopyApkTask>("copyApkToRoot") {
+    sourceApk.set(layout.buildDirectory.file("outputs/apk/debug/app-debug.apk"))
+    destApk.set(project.layout.projectDirectory.file("../app-debug.apk"))
+}
+
+tasks.matching { it.name == "assembleDebug" }.all {
+    finalizedBy("copyApkToRoot")
+}
+

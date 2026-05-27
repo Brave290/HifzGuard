@@ -71,6 +71,8 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
         super.onCreate()
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         prefsHelper = PreferencesHelper(this)
@@ -85,6 +87,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
         // Check triggers on start
         serviceScope.launch {
             evaluateOverlayState()
@@ -132,11 +135,11 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
                 )
             } catch (e: Throwable) {
-                Log.e(TAG, "Failed startForeground with type SPECIAL_USE, falling back", e)
+                Log.e(TAG, "Failed startForeground with type SPECIAL_USE", e)
                 try {
-                    startForeground(NOTIFICATION_ID, notification)
+                    stopSelf()
                 } catch (t: Throwable) {
-                    Log.e(TAG, "Failed all startForeground attempts", t)
+                    Log.e(TAG, "Failed to stopSelf after foreground failure", t)
                 }
             }
         } else {
@@ -420,7 +423,13 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
     override fun onDestroy() {
         hideLockOverlay()
         serviceScope.cancel()
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        try {
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        } catch (e: Throwable) {
+            Log.e(TAG, "Lifecycle onDestroy event transition failure", e)
+        }
         super.onDestroy()
     }
 
