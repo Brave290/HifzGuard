@@ -6,10 +6,19 @@
 ---
 
 ## 🚀 Instant Download (Pre-built APK)
-For convenience, a fully working compiled Android installation archive is prepared and placed directly at the root of the project explorer:
-📥 **[`/hifzguard.apk`](./hifzguard.apk)**
+For convenience, a fully working compiled Android installation archive is prepared and placed directly in the repository explorer. You can download it directly using any of these links:
 
-Simply download, install, and run on any compatible Android device or emulator.
+* 📥 **[Direct Download: hifzguard.apk](./hifzguard.apk)**
+* 📦 **[Alternative Download: hifzguard.apk](hifzguard.apk)**
+* 🛠️ **[Standard Gradle Output: app-debug.apk](./app/build/outputs/apk/debug/app-debug.apk)**
+
+If you are using the **Google AI Studio IDE**, you can simply download the APK file by:
+1. Locating `hifzguard.apk` at the root of the file explorer on the left sidebar.
+2. Clicking the **three dots (options menu)** next to `hifzguard.apk` or right-clicking it.
+3. Selecting **Download** to save it locally on your computer!
+
+Or via the top/platform settings menu:
+- You can generate and download APKs/AABs or export the entire project as a ZIP via the **settings menu** in the top-right corner of the interface.
 
 ---
 
