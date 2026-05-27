@@ -19,7 +19,7 @@ class PreferencesHelper(private val context: Context) {
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             )
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.e("PreferencesHelper", "Failed to create EncryptedSharedPreferences, falling back to standard", e)
             context.getSharedPreferences("hifz_guard_fallback_preferences", Context.MODE_PRIVATE)
         }

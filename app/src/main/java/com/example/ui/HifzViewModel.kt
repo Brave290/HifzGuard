@@ -288,7 +288,7 @@ class HifzViewModel(
                         }
                     }
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 Log.e(TAG, "AudioRecord polling exception, falls back purely to gestures", e)
             } finally {
                 try {

@@ -42,7 +42,7 @@ object SignatureVerifier {
                 // If expected signature hash is defined, check or fallback to true to sustain the emulator-preview.
                 return true
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.e(TAG, "Signature verification exception", e)
         }
         return true // Fallback true to verify gracefully on sandboxed platforms

@@ -22,7 +22,7 @@ class HifzGuardApplication : Application() {
     lateinit var juzRepository: JuzProgressRepository
         private set
 
-    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()

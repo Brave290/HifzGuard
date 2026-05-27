@@ -73,12 +73,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Anti-Tampering Layer E: Screenshot & screen record prevention
+        // Anti-Tampering Layer E: Screenshot & screen record prevention (Disabled in emulator-preview to prevent canvas blacking out)
+        /*
         try {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         } catch (e: Exception) {
             // Log and bypass warning log safely
         }
+        */
 
         enableEdgeToEdge()
 

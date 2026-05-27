@@ -57,8 +57,7 @@ class SessionDataStore(private val context: Context) {
             val lastDate = preferences[KEY_LAST_TRACKED_DATE] ?: ""
             if (lastDate.isNotEmpty() && lastDate != today) {
                 // It is a new day! Calculate debt
-                val goalMin = context.getSharedPreferences("hifz_guard_secure_preferences", Context.MODE_PRIVATE)
-                    .getInt("daily_goal_minutes", 60)
+                val goalMin = PreferencesHelper(context).dailyGoalMinutes
                 val currentSeconds = preferences[KEY_ACCUMULATED_SECONDS] ?: 0
                 val currentMinutes = currentSeconds / 60
                 
