@@ -1,0 +1,6 @@
+{
+  "name": "HifzGuard",
+  "description": "A self-enforcement Quran memorization and reading tracker that acts as an overlay lock until daily recitation goals are met.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
