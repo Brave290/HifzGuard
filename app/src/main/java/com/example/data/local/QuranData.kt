@@ -19,42 +19,75 @@ object QuranData {
         val translationMap = mutableMapOf<String, String>()
 
         try {
-            val transJsonString = context.assets.open("translation_en.json").bufferedReader().use { it.readText() }
-            val transJsonArray = org.json.JSONArray(transJsonString)
-            for (i in 0 until transJsonArray.length()) {
-                val obj = transJsonArray.getJSONObject(i)
-                val surahNum = obj.optInt("surah_number", -1)
-                val verseNum = obj.optInt("verse_number", -1)
-                val translation = obj.optString("translation", "")
+            val inputStream = context.assets.open("translation_en.json")
+            val reader = android.util.JsonReader(java.io.InputStreamReader(inputStream, "UTF-8"))
+            reader.isLenient = true
+            reader.beginArray()
+            while (reader.hasNext()) {
+                var surahNum = -1
+                var verseNum = -1
+                var translation = ""
+                reader.beginObject()
+                while (reader.hasNext()) {
+                    val name = reader.nextName()
+                    when (name) {
+                        "surah_number" -> surahNum = reader.nextInt()
+                        "verse_number" -> verseNum = reader.nextInt()
+                        "translation" -> translation = reader.nextString()
+                        else -> reader.skipValue()
+                    }
+                }
+                reader.endObject()
                 if (surahNum != -1 && verseNum != -1) {
                     translationMap["${surahNum}_${verseNum}"] = translation
                 }
             }
+            reader.endArray()
+            reader.close()
+            android.util.Log.d("QuranData", "Translation map size: ${translationMap.size}")
         } catch (t: Throwable) {
             android.util.Log.e("QuranData", "Error parsing translation_en.json", t)
         }
         
         try {
-            val jsonString = context.assets.open("quran.json").bufferedReader().use { it.readText() }
-            val jsonObject = org.json.JSONObject(jsonString)
-            
-            val keys = jsonObject.keys()
-            while (keys.hasNext()) {
-                val surahNumStr = keys.next()
-                val surahNum = surahNumStr.toIntOrNull() ?: continue
-                val versesArray = jsonObject.getJSONArray(surahNumStr)
+            val inputStream = context.assets.open("quran.json")
+            val reader = android.util.JsonReader(java.io.InputStreamReader(inputStream, "UTF-8"))
+            reader.isLenient = true
+            reader.beginObject()
+            while (reader.hasNext()) {
+                val surahNumStr = reader.nextName()
+                val surahNum = surahNumStr.toIntOrNull()
+                if (surahNum == null) {
+                    reader.skipValue()
+                    continue
+                }
                 
                 val verses = mutableListOf<Verse>()
-                for (i in 0 until versesArray.length()) {
-                    val verseObj = versesArray.getJSONObject(i)
-                    val verseNum = verseObj.optInt("verse", i + 1)
-                    val arabic = verseObj.optString("text", "")
-                    val translation = translationMap["${surahNum}_${verseNum}"] ?: ""
+                reader.beginArray()
+                while (reader.hasNext()) {
+                    var verseNum = -1
+                    var arabic = ""
+                    reader.beginObject()
+                    while (reader.hasNext()) {
+                        val name = reader.nextName()
+                        when (name) {
+                            "verse" -> verseNum = reader.nextInt()
+                            "text" -> arabic = reader.nextString()
+                            else -> reader.skipValue()
+                        }
+                    }
+                    reader.endObject()
                     
-                    verses.add(Verse(number = verseNum, arabic = arabic, translation = translation))
+                    if (verseNum == -1) continue
+                    val key = "${surahNum}_${verseNum}"
+                    val translation = translationMap[key]
+                    verses.add(Verse(number = verseNum, arabic = arabic, translation = translation ?: ""))
                 }
+                reader.endArray()
                 versesMap[surahNum] = verses
             }
+            reader.endObject()
+            reader.close()
         } catch (t: Throwable) {
             android.util.Log.e("QuranData", "Error parsing quran.json", t)
         }
