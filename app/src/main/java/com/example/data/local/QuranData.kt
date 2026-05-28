@@ -16,6 +16,23 @@ object QuranData {
     private fun loadSurahsFromAssets(context: Context): List<Surah> {
         val metadata = getSurahMetadata()
         val versesMap = mutableMapOf<Int, MutableList<Verse>>()
+        val translationMap = mutableMapOf<String, String>()
+
+        try {
+            val transJsonString = context.assets.open("translation_en.json").bufferedReader().use { it.readText() }
+            val transJsonArray = org.json.JSONArray(transJsonString)
+            for (i in 0 until transJsonArray.length()) {
+                val obj = transJsonArray.getJSONObject(i)
+                val surahNum = obj.optInt("surah_number", -1)
+                val verseNum = obj.optInt("verse_number", -1)
+                val translation = obj.optString("translation", "")
+                if (surahNum != -1 && verseNum != -1) {
+                    translationMap["${surahNum}_${verseNum}"] = translation
+                }
+            }
+        } catch (t: Throwable) {
+            android.util.Log.e("QuranData", "Error parsing translation_en.json", t)
+        }
         
         try {
             val jsonString = context.assets.open("quran.json").bufferedReader().use { it.readText() }
@@ -32,8 +49,9 @@ object QuranData {
                     val verseObj = versesArray.getJSONObject(i)
                     val verseNum = verseObj.optInt("verse", i + 1)
                     val arabic = verseObj.optString("text", "")
+                    val translation = translationMap["${surahNum}_${verseNum}"] ?: ""
                     
-                    verses.add(Verse(number = verseNum, arabic = arabic))
+                    verses.add(Verse(number = verseNum, arabic = arabic, translation = translation))
                 }
                 versesMap[surahNum] = verses
             }
@@ -58,7 +76,8 @@ object QuranData {
                     (1..meta.versesCount).map { vNum ->
                         Verse(
                             number = vNum,
-                            arabic = "آية ${vNum}"
+                            arabic = "آية ${vNum}",
+                            translation = ""
                         )
                     }
                 }
