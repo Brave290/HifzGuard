@@ -397,7 +397,7 @@ fun SettingsScreen(
                 // Add Update Button here
                 Button(
                     onClick = {
-                        val apkUrl = "https://github.com/Brave290/HifzGuard/releases/latest/download/app-debug.apk"
+                        val apkUrl = "https://github.com/Brave290/HifzGuard/raw/main/.build-outputs/app-debug.apk"
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(apkUrl))
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         try {
