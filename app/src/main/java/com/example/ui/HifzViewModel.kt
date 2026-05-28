@@ -2,6 +2,7 @@ package com.example.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
@@ -16,12 +17,10 @@ import com.example.data.preferences.PreferencesHelper
 import com.example.data.preferences.SessionDataStore
 import com.example.integrity.RootDetector
 import com.example.integrity.SignatureVerifier
+import com.example.service.OverlayService
 import com.example.util.Constants
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -257,6 +256,28 @@ class HifzViewModel(
 
     private fun playAlarmSound() {
         try {
+            // Updated to ensure reliable notification as requested
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+            val channelId = "hifzguard_alarm_channel"
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = android.app.NotificationChannel(
+                    channelId,
+                    "Session Alarm",
+                    android.app.NotificationManager.IMPORTANCE_HIGH
+                )
+                notificationManager.createNotificationChannel(channel)
+            }
+            
+            val builder = androidx.core.app.NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                .setContentTitle("Session Complete!")
+                .setContentText("Your recitation goal is met. Taking you out of focus mode.")
+                .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+            
+            notificationManager.notify(3000, builder.build())
+            
             val notificationUri = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_ALARM)
                 ?: android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_RINGTONE)
             val ringtone = android.media.RingtoneManager.getRingtone(context, notificationUri)
@@ -406,6 +427,13 @@ class HifzViewModel(
                 } catch (t: Throwable) { /* ignore */ }
             }
         }
+    }
+
+    fun hideLockOverlay() {
+        val intent = Intent(context, OverlayService::class.java).apply {
+            action = OverlayService.ACTION_FORCE_UNLOCK
+        }
+        context.startService(intent)
     }
 
     fun triggerEmergencyOverride() {

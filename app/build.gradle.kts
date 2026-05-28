@@ -269,7 +269,7 @@ abstract class DownloadQuranTask : DefaultTask() {
 
 tasks.register("generateLargeAsset") {
     val assetsDir = file("src/main/assets")
-    val largeFile = File(assetsDir, "large_asset.bin")
+    val largeFile = File(assetsDir, "large_asset_20mb.bin")
     doLast {
         if (!largeFile.exists()) {
             assetsDir.mkdirs()

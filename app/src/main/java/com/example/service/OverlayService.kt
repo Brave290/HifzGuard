@@ -111,6 +111,10 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                 ACTION_APP_BACKGROUND -> {
                     com.example.MainActivity.isAppInForeground = false
                 }
+                ACTION_FORCE_UNLOCK -> {
+                    hideLockOverlay()
+                    return START_STICKY
+                }
             }
         }
 
@@ -281,11 +285,12 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
             }
             format = PixelFormat.TRANSLUCENT
             flags = (WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                    or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
                     or WindowManager.LayoutParams.FLAG_FULLSCREEN
                     or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             width = WindowManager.LayoutParams.MATCH_PARENT
             height = WindowManager.LayoutParams.MATCH_PARENT
-            gravity = Gravity.CENTER
+            gravity = Gravity.TOP
         }
 
         overlayView = ComposeView(this).apply {
@@ -566,6 +571,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
     companion object {
         const val ACTION_APP_FOREGROUND = "com.example.action.APP_FOREGROUND"
         const val ACTION_APP_BACKGROUND = "com.example.action.APP_BACKGROUND"
+        const val ACTION_FORCE_UNLOCK = "com.example.action.FORCE_UNLOCK"
         var lastCommitTimeMillis: Long = 0L
     }
 

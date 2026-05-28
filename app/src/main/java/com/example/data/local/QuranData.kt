@@ -9,14 +9,8 @@ import java.nio.charset.StandardCharsets
 
 object QuranData {
 
-    // Cache the Surah list so we only parse the asset file once
-    @Volatile
-    private var cachedSurahs: List<Surah>? = null
-
     fun getSurahsList(context: Context): List<Surah> {
-        return cachedSurahs ?: synchronized(this) {
-            cachedSurahs ?: loadSurahsFromAssets(context).also { cachedSurahs = it }
-        }
+        return loadSurahsFromAssets(context)
     }
 
     private fun loadSurahsFromAssets(context: Context): List<Surah> {
@@ -27,6 +21,8 @@ object QuranData {
             val jsonString = context.assets.open("translation_en.json").bufferedReader().use { it.readText() }
             
             val jsonArray = JSONArray(jsonString)
+            android.util.Log.d("QuranData", "Parsing started, array size: ${jsonArray.length()}")
+            
             for (i in 0 until jsonArray.length()) {
                 val obj = jsonArray.getJSONObject(i)
                 val surahNum = obj.optInt("surah_number", -1)
@@ -39,8 +35,8 @@ object QuranData {
                     list.add(Verse(number = verseNum, arabic = arabic, translation = translation))
                 }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (t: Throwable) {
+            android.util.Log.e("QuranData", "Error parsing JSON", t)
         }
 
         return metadata.map { meta ->
