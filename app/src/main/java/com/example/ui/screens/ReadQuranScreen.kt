@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -15,12 +16,18 @@ import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -62,19 +69,121 @@ fun ReadQuranScreen(viewModel: HifzViewModel) {
     var selectedSurah by remember { mutableStateOf<Surah?>(null) }
     var searchQuery by remember { mutableStateOf("") }
 
+    var showGotoDialog by remember { mutableStateOf(false) }
+    var gotoSurahNumberInput by remember { mutableStateOf("") }
+    var gotoVerseNumberInput by remember { mutableStateOf("") }
+
+    val listState = rememberLazyListState()
+    var initialScrollIndex by remember { mutableStateOf(0) }
+
     val context = androidx.compose.ui.platform.LocalContext.current
     // Load full metadata + verses of all 114 Surahs dynamically from the safe central catalog module
     val surahsList = remember(context) { QuranData.getSurahsList(context) }
+
+    LaunchedEffect(selectedSurah, initialScrollIndex) {
+        if (selectedSurah != null && initialScrollIndex > 0) {
+            // Verse indices are 1-based, index 0 is first Bismillah/spacer header
+            listState.scrollToItem(initialScrollIndex)
+            initialScrollIndex = 0
+        }
+    }
 
     val filteredSurahs = surahsList.filter {
         it.nameEnglish.contains(searchQuery, ignoreCase = true) ||
                 it.translation.contains(searchQuery, ignoreCase = true)
     }
 
+    if (showGotoDialog) {
+        AlertDialog(
+            onDismissRequest = { showGotoDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(imageVector = Icons.Default.Explore, contentDescription = null, tint = GoldAccent)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("GOTO Surah / Verse", color = Color.White)
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "Enter a Surah and optional Verse number to navigate or scroll directly there.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                    OutlinedTextField(
+                        value = gotoSurahNumberInput,
+                        onValueChange = { gotoSurahNumberInput = it },
+                        label = { Text("Surah Number (1-114)", color = Color.White.copy(alpha = 0.6f)) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = GoldAccent,
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.2f)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = gotoVerseNumberInput,
+                        onValueChange = { gotoVerseNumberInput = it },
+                        label = { Text("Verse Number (Optional)", color = Color.White.copy(alpha = 0.6f)) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = GoldAccent,
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.2f)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val surahNum = gotoSurahNumberInput.toIntOrNull()
+                        if (surahNum != null && surahNum in 1..114) {
+                            val foundSurah = surahsList.find { it.number == surahNum }
+                            if (foundSurah != null) {
+                                selectedSurah = foundSurah
+                                val verseNum = gotoVerseNumberInput.toIntOrNull() ?: 1
+                                val clampedVerse = verseNum.coerceIn(1, foundSurah.versesCount)
+                                initialScrollIndex = clampedVerse
+                                showGotoDialog = false
+                                gotoSurahNumberInput = ""
+                                gotoVerseNumberInput = ""
+                            } else {
+                                Toast.makeText(context, "Surah not found", Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            Toast.makeText(context, "Please enter a valid Surah number (1-114)", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = GoldAccent, contentColor = Color.Black)
+                ) {
+                    Text("NAVIGATE", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showGotoDialog = false }) {
+                    Text("CANCEL", color = Color.White.copy(alpha = 0.6f))
+                }
+            },
+            containerColor = DarkCard,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF060F0A), // Extremely deep charcoal-emerald
+                        Color(0xFF0A1C12), // Dark emerald
+                        Color(0xFF050B08)  // Solid elegant black
+                    )
+                )
+            )
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             if (selectedSurah == null) {
@@ -113,21 +222,64 @@ fun ReadQuranScreen(viewModel: HifzViewModel) {
                     }
                 }
 
-                // Search Bar
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search Surah...", color = Color.White.copy(alpha = 0.4f)) },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = GoldAccent,
-                        unfocusedBorderColor = Color(0xFF1D3227)
-                    ),
+                // Search & GOTO controls
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                )
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Search Surah...", color = Color.White.copy(alpha = 0.4f)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search icon",
+                                tint = GoldAccent
+                            )
+                        },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = GoldAccent,
+                            unfocusedBorderColor = Color(0xFF1D3227)
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+
+                    Button(
+                        onClick = { showGotoDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0x22D4AF37)),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, GoldAccent.copy(alpha = 0.5f)),
+                        modifier = Modifier.height(56.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Explore,
+                                contentDescription = "GOTO icon",
+                                tint = GoldAccent,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                "GOTO",
+                                color = GoldAccent,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
 
                 // List of Surahs
                 LazyColumn(
@@ -232,6 +384,12 @@ fun ReadQuranScreen(viewModel: HifzViewModel) {
                             )
                         }
                         Spacer(modifier = Modifier.weight(1f))
+
+                        // Quick Navigate inside reading screen
+                        IconButton(onClick = { showGotoDialog = true }) {
+                            Icon(Icons.Default.Explore, contentDescription = "Quick Jump", tint = GoldAccent)
+                        }
+
                         Text(
                             text = selectedSurah!!.nameArabic,
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
@@ -240,8 +398,9 @@ fun ReadQuranScreen(viewModel: HifzViewModel) {
                         )
                     }
 
-                    // Verses list container
+                    // Verses list container with smooth scroll state
                     LazyColumn(
+                        state = listState,
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
@@ -290,6 +449,29 @@ fun ReadQuranScreen(viewModel: HifzViewModel) {
                                             text = "${verse.number}",
                                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                             color = GoldAccent
+                                        )
+                                    }
+
+                                    IconButton(
+                                        onClick = {
+                                            val shareText = "📖 *Shared from HifzGuard* \n\n" +
+                                                    "\"${verse.arabic}\"\n\n" +
+                                                    "Translation:\n" +
+                                                    "\"${verse.translation}\"\n\n" +
+                                                    "— Surah ${selectedSurah!!.nameEnglish} (${selectedSurah!!.nameArabic}), Verse ${verse.number}"
+                                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                                type = "text/plain"
+                                                putExtra(Intent.EXTRA_TEXT, shareText)
+                                            }
+                                            context.startActivity(Intent.createChooser(shareIntent, "Share Quran Verse"))
+                                        },
+                                        modifier = Modifier.size(28.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Share,
+                                            contentDescription = "Share Verse",
+                                            tint = GoldAccent.copy(alpha = 0.7f),
+                                            modifier = Modifier.size(16.dp)
                                         )
                                     }
                                 }

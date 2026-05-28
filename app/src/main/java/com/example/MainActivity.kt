@@ -18,6 +18,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
@@ -205,6 +206,70 @@ fun MainNavigationScaffold(
     var currentScreen by remember { mutableStateOf(HifzScreen.Dashboard) }
     val isSessionActive by viewModel.isSessionActive.collectAsState()
     val context = LocalContext.current
+
+    var showUpdateDialog by remember { mutableStateOf(false) }
+    var latestVersionName by remember { mutableStateOf("") }
+    var updateDownloadUrl by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        try {
+            val result = com.example.util.UpdateChecker.getLatestRelease()
+            if (result != null) {
+                val latestTag = result.first
+                val rawTag = latestTag.replace("v", "").replace("V", "").trim()
+                val currentVersion = "1.0"
+                if (rawTag.isNotEmpty() && rawTag != currentVersion) {
+                    latestVersionName = latestTag
+                    updateDownloadUrl = result.second
+                    showUpdateDialog = true
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Update check failure", e)
+        }
+    }
+
+    if (showUpdateDialog) {
+        AlertDialog(
+            onDismissRequest = { showUpdateDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Security, 
+                        contentDescription = null, 
+                        tint = GoldAccent
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("New Update Available!", color = Color.White)
+                }
+            },
+            text = {
+                Text(
+                    text = "A brand new update ($latestVersionName) is available for HifzGuard on GitHub! Update to retrieve the latest improvements and stay guarded.",
+                    color = Color.White.copy(alpha = 0.8f)
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(updateDownloadUrl))
+                        context.startActivity(intent)
+                        showUpdateDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = GoldAccent, contentColor = Color.Black)
+                ) {
+                    Text("UPDATE NOW", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUpdateDialog = false }) {
+                    Text("LATER", color = Color.White.copy(alpha = 0.6f))
+                }
+            },
+            containerColor = DarkCard,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
 
     // Periodically verify and ask for overlay permissions if not granted
     val hasOverlayPermission = remember {

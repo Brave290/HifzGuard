@@ -359,30 +359,6 @@ fun SettingsScreen(
             }
         }
 
-        // Section D: Share HifzGuard Referral
-        Button(
-            onClick = {
-                val shareMsg = Constants.SHARE_MESSAGE_TEMPLATE.replace("{DOWNLOAD_URL}", Constants.APP_DOWNLOAD_URL)
-                val intent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, shareMsg)
-                }
-                context.startActivity(Intent.createChooser(intent, "Share HifzGuard using"))
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-                .testTag("share_app_button")
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.Share, contentDescription = "Refer App")
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("SHARE HIFZGUARD (REFERRAL LINK)", fontWeight = FontWeight.Bold)
-            }
-        }
-
         // Section E: About Developer
         SectionCard(title = "About Information") {
             Column(
@@ -415,6 +391,28 @@ fun SettingsScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 12.dp)
                 )
+
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                // Add Update Button here
+                Button(
+                    onClick = {
+                        val apkUrl = "https://github.com/Brave290/HifzGuard/raw/main/.build-outputs/app-debug.apk"
+                        val request = android.app.DownloadManager.Request(Uri.parse(apkUrl))
+                            .setTitle("HifzGuard Update")
+                            .setDescription("Downloading latest version")
+                            .setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                            .setAllowedOverMetered(true)
+                            .setAllowedOverRoaming(true)
+                        
+                        val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
+                        downloadManager.enqueue(request)
+                        Toast.makeText(context, "Download started...", Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("DOWNLOAD LATEST APK")
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 

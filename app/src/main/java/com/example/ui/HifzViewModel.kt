@@ -226,6 +226,25 @@ class HifzViewModel(
         }
     }
 
+    fun resetAllStatistics() {
+        viewModelScope.launch {
+            // 1. Reset memorization database progress
+            juzProgressRepository.resetAll()
+            // 2. Clear Datastore values (accumulated seconds to 0, yesterday's debt to 0)
+            sessionDataStore.setAccumulatedSeconds(0)
+            sessionDataStore.setYesterdayDebtMinutes(0)
+            // 3. Clear SharedPreferences lifetime statistics
+            prefsHelper.totalLifetimeMinutes = 0
+            prefsHelper.streakCount = 0
+            prefsHelper.bestStreak = 0
+            // 4. Update the live flows so the UI reflects the reset immediately
+            totalLifetimeMinutes.value = 0
+            streakCount.value = 0
+            bestStreak.value = 0
+            _sessionElapsedSeconds.value = 0
+        }
+    }
+
     // 3. Active Session Controls
     fun setCommittedTargetMinutes(minutes: Int) {
         prefsHelper.committedTargetMinutes = minutes

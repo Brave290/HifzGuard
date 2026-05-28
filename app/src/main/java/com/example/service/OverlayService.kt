@@ -280,8 +280,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                 WindowManager.LayoutParams.TYPE_PHONE
             }
             format = PixelFormat.TRANSLUCENT
-            flags = (WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-                    or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+            flags = (WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                     or WindowManager.LayoutParams.FLAG_FULLSCREEN
                     or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             width = WindowManager.LayoutParams.MATCH_PARENT
@@ -300,6 +299,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                     Box(
                     modifier = Modifier
                         .fillMaxSize()
+                        .clickable(enabled = true, onClick = { /* NO-OP: absorbs all touches to prevent leaking to background apps */ })
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
@@ -447,20 +447,31 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
 
                         Spacer(modifier = Modifier.height(30.dp))
 
-                        // Only visual active controller
+                        // Disabled/Enabled based on active committed session to prevent pausing
+                        val isCommittedActive = prefsHelper.committedTargetMinutes > 0
+
                         Button(
                             onClick = {
-                                launchMainApp()
+                                if (!isCommittedActive) {
+                                    launchMainApp()
+                                }
                             },
+                            enabled = !isCommittedActive,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF0D5E3A),
-                                contentColor = Color.White
+                                containerColor = if (isCommittedActive) Color.DarkGray else Color(0xFF0D5E3A),
+                                contentColor = if (isCommittedActive) Color.Gray else Color.White,
+                                disabledContainerColor = Color(0x33FFFFFF),
+                                disabledContentColor = Color.White.copy(alpha = 0.4f)
                             ),
                             shape = RoundedCornerShape(24.dp),
                             modifier = Modifier
-                                .width(240.dp)
-                                .height(50.dp)
-                                .border(1.dp, Color(0xFFD4AF37), RoundedCornerShape(24.dp))
+                                .width(280.dp)
+                                .height(52.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = if (isCommittedActive) Color.Gray.copy(alpha = 0.3f) else Color(0xFFD4AF37),
+                                    shape = RoundedCornerShape(24.dp)
+                                )
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -473,9 +484,10 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "OPEN HIFZGUARD",
+                                    text = if (isCommittedActive) "LOCKED UNTIL TIMER EXPIRES" else "OPEN HIFZGUARD",
                                     fontWeight = FontWeight.Bold,
-                                    letterSpacing = 1.sp
+                                    letterSpacing = 0.5.sp,
+                                    fontSize = 11.sp
                                 )
                             }
                         }

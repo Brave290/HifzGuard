@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -54,6 +55,33 @@ fun StatisticsScreen(
     val weeklyMinutes = listOf(180f, 240f, 310f, 280f)
     val weeklyLabels = listOf("Wk 1", "Wk 2", "Wk 3", "Wk 4")
 
+    var showResetConfirm by remember { mutableStateOf(false) }
+
+    if (showResetConfirm) {
+        AlertDialog(
+            onDismissRequest = { showResetConfirm = false },
+            title = { Text("Reset Progress & Stats?", color = Color.White) },
+            text = { Text("Are you sure you want to permanently reset all your Quran progress, memorization matrix statuses, lifetime minutes, and streak values? This action cannot be undone.", color = Color.White.copy(alpha = 0.8f)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.resetAllStatistics()
+                        showResetConfirm = false
+                    }
+                ) {
+                    Text("RESET ALL", color = Color.Red, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetConfirm = false }) {
+                    Text("CANCEL", color = Color.White.copy(alpha = 0.6f))
+                }
+            },
+            containerColor = DarkCard,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -62,21 +90,38 @@ fun StatisticsScreen(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // Screen Header
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "PERFORMANCE ANALYTICS",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.2.sp
-                ),
-                color = GoldAccent
-            )
-            Text(
-                text = "Spiritual consistency and memorization milestones",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.White.copy(alpha = 0.5f)
-            )
+        // Screen Header with Reset Button
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "PERFORMANCE ANALYTICS",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.2.sp
+                    ),
+                    color = GoldAccent
+                )
+                Text(
+                    text = "Spiritual consistency and memorization milestones",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.White.copy(alpha = 0.5f)
+                )
+            }
+
+            IconButton(
+                onClick = { showResetConfirm = true },
+                modifier = Modifier.testTag("reset_statistics_btn")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Reset All Stats",
+                    tint = Color.Red.copy(alpha = 0.8f)
+                )
+            }
         }
 
         // Lifetime Milestones Grid

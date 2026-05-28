@@ -45,7 +45,6 @@ fun SessionScreen(
     val accumulatedSec by viewModel.accumulatedSeconds.collectAsState()
     val dailyGoalMin by viewModel.dailyGoalMinutes.collectAsState()
     val micAmp by viewModel.micAmplitude.collectAsState()
-    val isIdleReminderVisible by viewModel.isIdleReminderVisible.collectAsState()
     val lastManualConfirmationSec by viewModel.lastManualConfirmationMinutes.collectAsState()
 
     val currentSessionMinutes = accumulatedSec / 60
@@ -300,68 +299,6 @@ fun SessionScreen(
                         text = "FINISH SESSION",
                         fontWeight = FontWeight.Bold
                     )
-                }
-            }
-        }
-
-        // Animated idle reminder overlay
-        AnimatedVisibility(
-            visible = isIdleReminderVisible,
-            enter = fadeIn() + slideInVertically { it / 2 },
-            exit = fadeOut() + slideOutVertically { it / 2 }
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.85f))
-                    .clickable { viewModel.notifyUserInteraction() }, // Any tap resumes!
-                contentAlignment = Alignment.Center
-            ) {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = DarkCard),
-                    border = BorderStroke(1.dp, GoldAccent),
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .padding(32.dp)
-                        .width(320.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = "Alert",
-                            tint = GoldAccent,
-                            modifier = Modifier.size(48.dp)
-                        )
-
-                        Text(
-                            text = "Your recitation is waiting.",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            textAlign = TextAlign.Center,
-                            color = Color.White
-                        )
-
-                        Text(
-                            text = "No interaction or voice amplitude has been detected for 2 minutes. Tap anywhere to resume your goals.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center
-                        )
-
-                        Button(
-                            onClick = { viewModel.notifyUserInteraction() },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(46.dp)
-                        ) {
-                            Text("RESUME SESSION", fontWeight = FontWeight.Bold)
-                        }
-                    }
                 }
             }
         }
