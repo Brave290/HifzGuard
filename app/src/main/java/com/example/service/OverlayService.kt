@@ -88,6 +88,18 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+        
+        intent?.action?.let { action ->
+            when (action) {
+                ACTION_APP_FOREGROUND -> {
+                    com.example.MainActivity.isAppInForeground = true
+                }
+                ACTION_APP_BACKGROUND -> {
+                    com.example.MainActivity.isAppInForeground = false
+                }
+            }
+        }
+
         // Check triggers on start
         serviceScope.launch {
             evaluateOverlayState()
@@ -206,11 +218,17 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
         // Core lock trigger condition:
         // 1. Goal not met today AND past 8pm (threshold)
         // OR 2. Goal not met today AND carrying debt from yesterday (debt > 0 makes it all-day lock until today's goal is met!)
-        val shouldLock = !isGoalMet && !isEmergencyActive && (isPastThreshold || debt > 0)
+        val isAppInForeground = com.example.MainActivity.isAppInForeground
+        val baseShouldLock = !isGoalMet && !isEmergencyActive && (isPastThreshold || debt > 0)
+        val shouldLock = baseShouldLock && !isAppInForeground
 
         withContext(Dispatchers.Main) {
             if (shouldLock) {
+                val wasAttached = isOverlayAttached
                 showLockOverlay(remainingGoalMinutes)
+                if (!wasAttached) {
+                    launchMainApp()
+                }
             } else {
                 hideLockOverlay()
             }
@@ -436,6 +454,11 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
             Log.e(TAG, "Lifecycle onDestroy event transition failure", e)
         }
         super.onDestroy()
+    }
+
+    companion object {
+        const val ACTION_APP_FOREGROUND = "com.example.action.APP_FOREGROUND"
+        const val ACTION_APP_BACKGROUND = "com.example.action.APP_BACKGROUND"
     }
 
     override fun onBind(intent: Intent?): IBinder? {

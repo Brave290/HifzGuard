@@ -27,6 +27,8 @@ Or via the top/platform settings menu:
 - [x] **Voice-Tracked Reading Session**: Utilizes the microphone to detect voice amplitude and wave frequencies in real-time, pausing automatically on silent inactivity.
 - [x] **SYSTEM_ALERT_WINDOW Safety Checks**: Added critical pre-execution overlay checks ensuring safety on different Android API versions if the overlay draw-permission is not granted.
 - [x] **Spiritual Overlay Blocker**: Draw-over-other-apps lock screen that shields your focus from social media once locking hours are reached on uncompleted goals.
+- [x] **Foreground Smart Bypass**: Solves lockscreen deadlocks by automatically hiding the block overlay when HifzGuard itself is in the foreground, allowing uninterrupted recitation.
+- [x] **Auto-Open on Lock**: Instantly launches HifzGuard when the locking threshold is reached, prompting you to immediately complete your spiritual goals.
 - [x] **Emergency 30M Override**: Keeps life-essential operations reachable through safety bypass tags.
 - [x] **Anti-Tamper & Security Verifications**: Integrated signature verifications, custom obfuscation frameworks, and security alerts.
 

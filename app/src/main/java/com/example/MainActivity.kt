@@ -56,6 +56,44 @@ enum class HifzScreen {
 
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        var isAppInForeground = false
+    }
+
+    override fun onStart() {
+        super.onStart()
+        isAppInForeground = true
+        val intent = Intent(this, OverlayService::class.java).apply {
+            action = OverlayService.ACTION_APP_FOREGROUND
+        }
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+        } catch (e: Exception) {
+            // Log or fallback
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        isAppInForeground = false
+        val intent = Intent(this, OverlayService::class.java).apply {
+            action = OverlayService.ACTION_APP_BACKGROUND
+        }
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+        } catch (e: Exception) {
+            // Log or fallback
+        }
+    }
+
     private lateinit var viewModel: HifzViewModel
 
     // Audio recording request launcher
