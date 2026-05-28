@@ -8,8 +8,8 @@
 ## 🚀 Instant Download (Pre-built APK)
 For convenience, a fully working compiled Android installation archive is prepared and placed directly in the repository explorer. You can download it directly using any of these links:
 
-* 📥 **[Direct Download: app-debug.apk](.build-outputs/app-debug.apk)**
-* 📦 **[Alternative Download: app-debug.apk](.build-outputs/app-debug.apk)**
+* 📥 **[Direct Download: app-debug.apk](./app-debug.apk)**
+* 📦 **[Alternative Download: app-debug.apk](app-debug.apk)**
 
 If you are using the **Google AI Studio IDE**, you can simply download the APK file by:
 1. Locating `app-debug.apk` at the root of the file explorer on the left sidebar.

@@ -24,12 +24,7 @@ object QuranData {
         val versesMap = mutableMapOf<Int, MutableList<Verse>>()
         
         try {
-            val inputStream: InputStream = context.assets.open("translation_en.json")
-            val size = inputStream.available()
-            val buffer = ByteArray(size)
-            inputStream.read(buffer)
-            inputStream.close()
-            val jsonString = String(buffer, StandardCharsets.UTF_8)
+            val jsonString = context.assets.open("translation_en.json").bufferedReader().use { it.readText() }
             
             val jsonArray = JSONArray(jsonString)
             for (i in 0 until jsonArray.length()) {
