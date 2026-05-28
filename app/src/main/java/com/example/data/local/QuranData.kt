@@ -33,7 +33,7 @@ object QuranData {
                     val verseNum = verseObj.optInt("verse", i + 1)
                     val arabic = verseObj.optString("text", "")
                     
-                    verses.add(Verse(number = verseNum, arabic = arabic, translation = ""))
+                    verses.add(Verse(number = verseNum, arabic = arabic))
                 }
                 versesMap[surahNum] = verses
             }
@@ -58,8 +58,7 @@ object QuranData {
                     (1..meta.versesCount).map { vNum ->
                         Verse(
                             number = vNum,
-                            arabic = "آية ${vNum}",
-                            translation = "Verse ${vNum} of ${meta.nameEnglish}"
+                            arabic = "آية ${vNum}"
                         )
                     }
                 }

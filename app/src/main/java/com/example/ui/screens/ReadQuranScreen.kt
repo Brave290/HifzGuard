@@ -53,8 +53,7 @@ data class Surah(
 
 data class Verse(
     val number: Int,
-    val arabic: String,
-    val translation: String
+    val arabic: String
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -456,8 +455,6 @@ fun ReadQuranScreen(viewModel: HifzViewModel) {
                                         onClick = {
                                             val shareText = "📖 *Shared from HifzGuard* \n\n" +
                                                     "\"${verse.arabic}\"\n\n" +
-                                                    "Translation:\n" +
-                                                    "\"${verse.translation}\"\n\n" +
                                                     "— Surah ${selectedSurah!!.nameEnglish} (${selectedSurah!!.nameArabic}), Verse ${verse.number}"
                                             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                                 type = "text/plain"
@@ -487,16 +484,6 @@ fun ReadQuranScreen(viewModel: HifzViewModel) {
                                     ),
                                     color = Color.White,
                                     textAlign = TextAlign.Right,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                Text(
-                                    text = verse.translation,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.White.copy(alpha = 0.7f),
-                                    textAlign = TextAlign.Left,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }

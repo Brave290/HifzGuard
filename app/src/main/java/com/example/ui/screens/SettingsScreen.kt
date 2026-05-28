@@ -397,17 +397,14 @@ fun SettingsScreen(
                 // Add Update Button here
                 Button(
                     onClick = {
-                        val apkUrl = "https://github.com/Brave290/HifzGuard/raw/main/.build-outputs/app-debug.apk"
-                        val request = android.app.DownloadManager.Request(Uri.parse(apkUrl))
-                            .setTitle("HifzGuard Update")
-                            .setDescription("Downloading latest version")
-                            .setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                            .setAllowedOverMetered(true)
-                            .setAllowedOverRoaming(true)
-                        
-                        val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
-                        downloadManager.enqueue(request)
-                        Toast.makeText(context, "Download started...", Toast.LENGTH_SHORT).show()
+                        val apkUrl = "https://github.com/Brave290/HifzGuard/releases/latest/download/app-debug.apk"
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(apkUrl))
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Could not open browser for update.", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
