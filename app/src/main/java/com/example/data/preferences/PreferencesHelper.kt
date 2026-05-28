@@ -38,11 +38,21 @@ class PreferencesHelper(private val context: Context) {
         const val KEY_LAST_STREAK_DATE = "last_streak_date"
         const val KEY_TOTAL_LIFETIME_MINUTES = "total_lifetime_minutes"
         const val KEY_BEST_STREAK = "best_streak"
+        const val KEY_COMMITTED_TARGET_MINUTES = "committed_target_minutes"
+        const val KEY_TEMPORARY_UNLOCK_UNTIL = "temporary_unlock_until"
     }
 
     var dailyGoalMinutes: Int
         get() = sharedPrefs.getInt(KEY_DAILY_GOAL, Constants.DEFAULT_GOAL_MINUTES)
         set(value) = sharedPrefs.edit().putInt(KEY_DAILY_GOAL, value).apply()
+
+    var committedTargetMinutes: Int
+        get() = sharedPrefs.getInt(KEY_COMMITTED_TARGET_MINUTES, 0)
+        set(value) = sharedPrefs.edit().putInt(KEY_COMMITTED_TARGET_MINUTES, value).apply()
+
+    var temporaryUnlockUntil: Long
+        get() = sharedPrefs.getLong(KEY_TEMPORARY_UNLOCK_UNTIL, 0L)
+        set(value) = sharedPrefs.edit().putLong(KEY_TEMPORARY_UNLOCK_UNTIL, value).apply()
 
     var lockThresholdHour: Int
         get() = sharedPrefs.getInt(KEY_LOCK_THRESHOLD_HOUR, Constants.DEFAULT_LOCK_HOUR)
@@ -88,7 +98,19 @@ class PreferencesHelper(private val context: Context) {
         return System.currentTimeMillis() < emergencyOverrideUntil
     }
 
+    fun isTemporaryUnlockActive(): Boolean {
+        return System.currentTimeMillis() < temporaryUnlockUntil
+    }
+
     fun triggerEmergencyOverride() {
         emergencyOverrideUntil = System.currentTimeMillis() + (30 * 60 * 1000) // 30 mins
+    }
+
+    fun registerListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        sharedPrefs.registerOnSharedPreferenceChangeListener(listener)
+    }
+
+    fun unregisterListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        sharedPrefs.unregisterOnSharedPreferenceChangeListener(listener)
     }
 }

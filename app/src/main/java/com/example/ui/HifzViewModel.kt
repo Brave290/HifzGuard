@@ -43,6 +43,10 @@ class HifzViewModel(
 
     // Preferences & settings fields exposing to UI
     val dailyGoalMinutes = MutableStateFlow(prefsHelper.dailyGoalMinutes)
+    val committedTargetMinutes = MutableStateFlow(prefsHelper.committedTargetMinutes)
+    private val _sessionElapsedSeconds = MutableStateFlow(0)
+    val sessionElapsedSeconds: StateFlow<Int> = _sessionElapsedSeconds.asStateFlow()
+
     val lockThresholdHour = MutableStateFlow(prefsHelper.lockThresholdHour)
     val lockThresholdMinute = MutableStateFlow(prefsHelper.lockThresholdMinute)
     val accountabilityPhone = MutableStateFlow(prefsHelper.accountabilityPhone)
@@ -95,9 +99,45 @@ class HifzViewModel(
         initialValue = 0
     )
 
+    private val prefChangeListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        when (key) {
+            "daily_goal_minutes" -> {
+                dailyGoalMinutes.value = prefsHelper.dailyGoalMinutes
+            }
+            "committed_target_minutes" -> {
+                committedTargetMinutes.value = prefsHelper.committedTargetMinutes
+            }
+            "lock_threshold_hour" -> {
+                lockThresholdHour.value = prefsHelper.lockThresholdHour
+            }
+            "lock_threshold_minute" -> {
+                lockThresholdMinute.value = prefsHelper.lockThresholdMinute
+            }
+            "accountability_phone_number" -> {
+                accountabilityPhone.value = prefsHelper.accountabilityPhone
+            }
+            "consequence_enabled" -> {
+                consequenceEnabled.value = prefsHelper.consequenceEnabled
+            }
+            "consequence_message_template" -> {
+                consequenceMessageTemplate.value = prefsHelper.consequenceMessageTemplate
+            }
+            "streak_count" -> {
+                streakCount.value = prefsHelper.streakCount
+            }
+            "best_streak" -> {
+                bestStreak.value = prefsHelper.bestStreak
+            }
+            "total_lifetime_minutes" -> {
+                totalLifetimeMinutes.value = prefsHelper.totalLifetimeMinutes
+            }
+        }
+    }
+
     init {
         performIntegrityChecks()
         monitorGoalCompletionToUpdateStreak()
+        prefsHelper.registerListener(prefChangeListener)
     }
 
     private fun performIntegrityChecks() {
@@ -187,10 +227,37 @@ class HifzViewModel(
     }
 
     // 3. Active Session Controls
+    fun setCommittedTargetMinutes(minutes: Int) {
+        prefsHelper.committedTargetMinutes = minutes
+        committedTargetMinutes.value = minutes
+        if (minutes > 0) {
+            prefsHelper.dailyGoalMinutes = minutes
+            dailyGoalMinutes.value = minutes
+        }
+    }
+
+    private fun playAlarmSound() {
+        try {
+            val notificationUri = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_ALARM)
+                ?: android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_RINGTONE)
+            val ringtone = android.media.RingtoneManager.getRingtone(context, notificationUri)
+            ringtone?.play()
+            viewModelScope.launch {
+                delay(5000)
+                if (ringtone?.isPlaying == true) {
+                    ringtone.stop()
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error playing alarm sound", e)
+        }
+    }
+
     fun startSession() {
         if (_isSessionActive.value) return
         _isSessionActive.value = true
         _isIdleReminderVisible.value = false
+        _sessionElapsedSeconds.value = 0 // Reset elapsed count for the current session
         lastActivityTimeMillis = System.currentTimeMillis()
         _lastManualConfirmationMinutes.value = 0
 
@@ -229,9 +296,26 @@ class HifzViewModel(
             while (_isSessionActive.value) {
                 delay(1000)
                 sessionDataStore.incrementAccumulatedSeconds(1)
+                _sessionElapsedSeconds.value += 1
 
                 val elapsedSec = accumulatedSeconds.value
                 val minElapsed = elapsedSec / 60
+
+                // Check committed target
+                val targetMinutes = committedTargetMinutes.value
+                if (targetMinutes > 0 && _sessionElapsedSeconds.value >= targetMinutes * 60) {
+                    // 1. Play the alarm sound!
+                    playAlarmSound()
+                    
+                    // 2. Set permanent daily auto-unlock bypass
+                    prefsHelper.temporaryUnlockUntil = System.currentTimeMillis() + (24 * 60 * 60 * 1000)
+                    
+                    // 3. Reset target
+                    prefsHelper.committedTargetMinutes = 0
+                    committedTargetMinutes.value = 0
+                    
+                    Log.i(TAG, "Committed session timer reached! Playing alarm and auto-unlocking overlay.")
+                }
 
                 // Track the manual reminder limit (user must tap interactive confirm button every 10 mins)
                 _lastManualConfirmationMinutes.value = (_lastManualConfirmationMinutes.value + 1).coerceAtMost(60)
@@ -307,6 +391,15 @@ class HifzViewModel(
 
     fun triggerEmergencyOverride() {
         prefsHelper.triggerEmergencyOverride()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        try {
+            prefsHelper.unregisterListener(prefChangeListener)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to unregister preference listener", e)
+        }
     }
 }
 

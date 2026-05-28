@@ -25,10 +25,14 @@ Or via the top/platform settings menu:
 - [x] **Cinematic Dashboard**: Dark luxury theme featuring consistent stats, streak highlights, and modern interactive elements.
 - [x] **Adaptive Juz Progress Grid**: Custom 30-Juz matrix to cycle statuses (Gray/Unsaved -> Orange/In-Progress -> Green/Memorized) and log personal milestones.
 - [x] **Voice-Tracked Reading Session**: Utilizes the microphone to detect voice amplitude and wave frequencies in real-time, pausing automatically on silent inactivity.
+- [x] **Authentic Full Offline Quran**: Integrated complete **114 Quran Chapters** (Surahs) with exact verse-by-verse original Arabic script and English translations side-by-side parsed dynamically from local assets. No mock data, no placeholder verses.
+- [x] **Configuration-Cache Direct Assets Download**: Built a robust Gradle download pipeline hooked into the compile lifecycle (`preBuild`), which successfully downloads the complete scripture JSON on compile time (safely fallback-guaranteed).
+- [x] **Timer Settings Automatic Sync**: Selecting a recitation commitment session duration (e.g., 5 minutes) anywhere in the app or the lock overlay instantly updates the system preferences.
+- [x] **Inter-Process SharedPreferences Observers**: Introduced a reactive preference observer in `HifzViewModel` and `OverlayService`. Any setting changes instantly propagate across screens in real-time!
+- [x] **Dedicated Overlay Lock Screen**: Starting a committed session blocks you from leaving HifzGuard. Leaving the app triggers the focus overlay, covering the screen and reminding you of your focus. Once the selected session timer expires, the overlay dismisses itself automatically and instantly!
 - [x] **SYSTEM_ALERT_WINDOW Safety Checks**: Added critical pre-execution overlay checks ensuring safety on different Android API versions if the overlay draw-permission is not granted.
 - [x] **Spiritual Overlay Blocker**: Draw-over-other-apps lock screen that shields your focus from social media once locking hours are reached on uncompleted goals.
 - [x] **Foreground Smart Bypass**: Solves lockscreen deadlocks by automatically hiding the block overlay when HifzGuard itself is in the foreground, allowing uninterrupted recitation.
-- [x] **Auto-Open on Lock**: Instantly launches HifzGuard when the locking threshold is reached, prompting you to immediately complete your spiritual goals.
 - [x] **Emergency 30M Override**: Keeps life-essential operations reachable through safety bypass tags.
 - [x] **Anti-Tamper & Security Verifications**: Integrated signature verifications, custom obfuscation frameworks, and security alerts.
 
@@ -43,4 +47,3 @@ To resolve the slow loading, startup failures, and permission crashes, the follo
 
 ---
 *Made with 🤍 by Akanji Mus'ab*
-

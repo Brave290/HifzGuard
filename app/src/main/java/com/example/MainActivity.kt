@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.WindowManager
 import android.widget.Toast
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -20,6 +21,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.HeadsetMic
@@ -48,6 +50,7 @@ import com.example.integrity.RootDetector
 
 enum class HifzScreen {
     Dashboard,
+    ReadQuran,
     Session,
     JuzGrid,
     Statistics,
@@ -60,38 +63,36 @@ class MainActivity : ComponentActivity() {
         var isAppInForeground = false
     }
 
+    private fun safeStartOverlayService(actionString: String) {
+        val intent = Intent(this, OverlayService::class.java).apply {
+            action = actionString
+        }
+        try {
+            // Try starting service normally first (safe if service already foregrounded or if app is in foreground)
+            startService(intent)
+        } catch (e: Exception) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(intent)
+                } else {
+                    startService(intent)
+                }
+            } catch (ex: Exception) {
+                Log.e("MainActivity", "Failed to start overlay service safely with action: $actionString", ex)
+            }
+        }
+    }
+
     override fun onStart() {
         super.onStart()
         isAppInForeground = true
-        val intent = Intent(this, OverlayService::class.java).apply {
-            action = OverlayService.ACTION_APP_FOREGROUND
-        }
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent)
-            } else {
-                startService(intent)
-            }
-        } catch (e: Exception) {
-            // Log or fallback
-        }
+        safeStartOverlayService(OverlayService.ACTION_APP_FOREGROUND)
     }
 
     override fun onStop() {
         super.onStop()
         isAppInForeground = false
-        val intent = Intent(this, OverlayService::class.java).apply {
-            action = OverlayService.ACTION_APP_BACKGROUND
-        }
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent)
-            } else {
-                startService(intent)
-            }
-        } catch (e: Exception) {
-            // Log or fallback
-        }
+        safeStartOverlayService(OverlayService.ACTION_APP_BACKGROUND)
     }
 
     private lateinit var viewModel: HifzViewModel
@@ -239,6 +240,20 @@ fun MainNavigationScaffold(
                     )
 
                     NavigationBarItem(
+                        selected = currentScreen == HifzScreen.ReadQuran,
+                        onClick = { currentScreen = HifzScreen.ReadQuran },
+                        icon = { Icon(Icons.Default.Book, contentDescription = "Read Quran") },
+                        label = { Text("Read Quran") },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = GoldAccent,
+                            selectedTextColor = GoldAccent,
+                            indicatorColor = Color(0x1AD4AF37),
+                            unselectedIconColor = Color.White.copy(alpha = 0.5f),
+                            unselectedTextColor = Color.White.copy(alpha = 0.5f)
+                        )
+                    )
+
+                    NavigationBarItem(
                         selected = currentScreen == HifzScreen.JuzGrid,
                         onClick = { currentScreen = HifzScreen.JuzGrid },
                         icon = { Icon(Icons.Default.GridOn, contentDescription = "Juz Progress") },
@@ -301,6 +316,9 @@ fun MainNavigationScaffold(
                             currentScreen = HifzScreen.JuzGrid
                         }
                     )
+                }
+                HifzScreen.ReadQuran -> {
+                    ReadQuranScreen(viewModel = viewModel)
                 }
                 HifzScreen.Session -> {
                     SessionScreen(

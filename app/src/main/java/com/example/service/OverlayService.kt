@@ -13,6 +13,7 @@ import android.view.Gravity
 import android.view.WindowManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,9 +24,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import com.example.ui.theme.HifzGuardTheme
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -65,6 +69,14 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
     private var overlayView: ComposeView? = null
     private var isOverlayAttached = false
 
+    private val prefChangeListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == "committed_target_minutes" || key == "daily_goal_minutes" || key == "temporary_unlock_until") {
+            serviceScope.launch {
+                evaluateOverlayState()
+            }
+        }
+    }
+
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     override fun onCreate() {
@@ -77,6 +89,8 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         prefsHelper = PreferencesHelper(this)
         sessionDataStore = SessionDataStore(this)
+
+        prefsHelper.registerListener(prefChangeListener)
 
         createNotificationChannel()
         startForegroundServiceCompact()
@@ -147,11 +161,14 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
                 )
             } catch (e: Throwable) {
-                Log.e(TAG, "Failed startForeground with type SPECIAL_USE", e)
+                Log.e(TAG, "Failed startForeground with type SPECIAL_USE, trying standard fallback foreground", e)
                 try {
-                    stopSelf()
-                } catch (t: Throwable) {
-                    Log.e(TAG, "Failed to stopSelf after foreground failure", t)
+                    startForeground(NOTIFICATION_ID, notification)
+                } catch (ex: Throwable) {
+                    Log.e(TAG, "Failed standard fallback startForeground as well. Stopping self.", ex)
+                    try {
+                        stopSelf()
+                    } catch (t: Throwable) { /* ignore */ }
                 }
             }
         } else {
@@ -214,21 +231,27 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
 
         // Lock overrides (such as emergency 30 mins, or signature mismatch, etc.)
         val isEmergencyActive = prefsHelper.isEmergencyOverrideActive()
+        val isTemporaryUnlockActive = prefsHelper.isTemporaryUnlockActive()
 
         // Core lock trigger condition:
         // 1. Goal not met today AND past 8pm (threshold)
         // OR 2. Goal not met today AND carrying debt from yesterday (debt > 0 makes it all-day lock until today's goal is met!)
         val isAppInForeground = com.example.MainActivity.isAppInForeground
-        val baseShouldLock = !isGoalMet && !isEmergencyActive && (isPastThreshold || debt > 0)
-        val shouldLock = baseShouldLock && !isAppInForeground
+        val baseShouldLock = !isGoalMet && !isEmergencyActive && !isTemporaryUnlockActive && (isPastThreshold || debt > 0)
+        
+        // Active committed session rules as user requested: locks user immediately if they leave the app.
+        val isCommittedSessionActive = prefsHelper.committedTargetMinutes > 0
+        val isGracePeriodActive = System.currentTimeMillis() < lastCommitTimeMillis + 2000L
+        
+        val shouldLock = if (isCommittedSessionActive) {
+            !isAppInForeground && !isEmergencyActive && !isGracePeriodActive
+        } else {
+            baseShouldLock && !isAppInForeground
+        }
 
         withContext(Dispatchers.Main) {
             if (shouldLock) {
-                val wasAttached = isOverlayAttached
                 showLockOverlay(remainingGoalMinutes)
-                if (!wasAttached) {
-                    launchMainApp()
-                }
             } else {
                 hideLockOverlay()
             }
@@ -267,12 +290,14 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
         }
 
         overlayView = ComposeView(this).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setViewTreeLifecycleOwner(this@OverlayService)
             setViewTreeViewModelStoreOwner(this@OverlayService)
             setViewTreeSavedStateRegistryOwner(this@OverlayService)
 
             setContent {
-                Box(
+                HifzGuardTheme {
+                    Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
@@ -356,7 +381,71 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(48.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // Prompt users to set target session minutes
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color(0x33D4AF37)),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.width(300.dp).border(1.dp, Color(0x66D4AF37), RoundedCornerShape(16.dp))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "COMMIT TO RECITE NOW",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = Color(0xFFD4AF37)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Set a duration to recite. Once the time is up, an alarm chimes and auto-unlocks your entire phone.",
+                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
+                                    color = Color.White.copy(alpha = 0.7f),
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    listOf(5, 10, 15, 30).forEach { mins ->
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(36.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Color(0x22FFFFFF))
+                                                .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                                                .clickable {
+                                                    // Set commitment in prefs
+                                                    prefsHelper.committedTargetMinutes = mins
+                                                    // Sync and change daily goal in settings automatically as requested
+                                                    prefsHelper.dailyGoalMinutes = mins
+                                                    // Set last commit time for a transition grace period
+                                                    lastCommitTimeMillis = System.currentTimeMillis()
+                                                    // Give temporary unlock to start reciting
+                                                    prefsHelper.temporaryUnlockUntil = System.currentTimeMillis() + (mins * 60 * 1000)
+                                                    
+                                                    // Open HifzGuard immediately
+                                                    launchMainApp()
+                                                }
+                                        ) {
+                                            Text(
+                                                text = "${mins}M",
+                                                color = Color.White,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 12.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(30.dp))
 
                         // Only visual active controller
                         Button(
@@ -412,6 +501,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                 }
             }
         }
+    }
 
         try {
             windowManager.addView(overlayView, layoutParams)
@@ -444,6 +534,11 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
     }
 
     override fun onDestroy() {
+        try {
+            prefsHelper.unregisterListener(prefChangeListener)
+        } catch (e: Exception) {
+            Log.e(TAG, "Unregister prefChangeListener fail", e)
+        }
         hideLockOverlay()
         serviceScope.cancel()
         try {
@@ -459,6 +554,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
     companion object {
         const val ACTION_APP_FOREGROUND = "com.example.action.APP_FOREGROUND"
         const val ACTION_APP_BACKGROUND = "com.example.action.APP_BACKGROUND"
+        var lastCommitTimeMillis: Long = 0L
     }
 
     override fun onBind(intent: Intent?): IBinder? {

@@ -47,6 +47,8 @@ fun DashboardScreen(
     val progressFraction = if (goalMinutes > 0) currentMinutes.toFloat() / goalMinutes.toFloat() else 0f
     val isGoalCompleted = currentMinutes >= goalMinutes
 
+    var showTargetDialog by remember { mutableStateOf(false) }
+
     // Animated glow effect for button
     val infiniteTransition = rememberInfiniteTransition(label = "StartGlow")
     val scaleAnim by infiniteTransition.animateFloat(
@@ -58,6 +60,76 @@ fun DashboardScreen(
         ),
         label = "StartScale"
     )
+
+    if (showTargetDialog) {
+        AlertDialog(
+            onDismissRequest = { showTargetDialog = false },
+            title = {
+                Text(
+                    text = "SET RECITE TIMER",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.2.sp
+                    ),
+                    color = GoldAccent
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "Choose a commitment duration for this recitation. The app will play an alarm and auto-unlock once your target expires.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    
+                    listOf(5, 10, 15, 30).forEach { mins ->
+                        Button(
+                            onClick = {
+                                viewModel.setCommittedTargetMinutes(mins)
+                                showTargetDialog = false
+                                onStartSessionClick()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = DarkCard,
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, Color(0xFF1D3227), RoundedCornerShape(12.dp)),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("$mins Minutes Session", fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Button(
+                        onClick = {
+                            viewModel.setCommittedTargetMinutes(0)
+                            showTargetDialog = false
+                            onStartSessionClick()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Continuous free recitation", fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showTargetDialog = false }) {
+                    Text("CANCEL", color = Color.Gray)
+                }
+            },
+            containerColor = Color(0xFF121B16),
+            textContentColor = Color.White
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -175,7 +247,7 @@ fun DashboardScreen(
 
             // Start Session Button
             Button(
-                onClick = onStartSessionClick,
+                onClick = { showTargetDialog = true },
                 modifier = Modifier
                     .scale(scaleAnim)
                     .width(260.dp)
