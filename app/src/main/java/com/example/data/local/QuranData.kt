@@ -18,25 +18,27 @@ object QuranData {
         val versesMap = mutableMapOf<Int, MutableList<Verse>>()
         
         try {
-            val jsonString = context.assets.open("translation_en.json").bufferedReader().use { it.readText() }
+            val jsonString = context.assets.open("quran.json").bufferedReader().use { it.readText() }
+            val jsonObject = org.json.JSONObject(jsonString)
             
-            val jsonArray = JSONArray(jsonString)
-            android.util.Log.d("QuranData", "Parsing started, array size: ${jsonArray.length()}")
-            
-            for (i in 0 until jsonArray.length()) {
-                val obj = jsonArray.getJSONObject(i)
-                val surahNum = obj.optInt("surah_number", -1)
-                val verseNum = obj.optInt("verse_number", -1)
-                val arabic = obj.optString("text", "")
-                val translation = obj.optString("translation", "")
+            val keys = jsonObject.keys()
+            while (keys.hasNext()) {
+                val surahNumStr = keys.next()
+                val surahNum = surahNumStr.toIntOrNull() ?: continue
+                val versesArray = jsonObject.getJSONArray(surahNumStr)
                 
-                if (surahNum != -1 && verseNum != -1) {
-                    val list = versesMap.getOrPut(surahNum) { mutableListOf() }
-                    list.add(Verse(number = verseNum, arabic = arabic, translation = translation))
+                val verses = mutableListOf<Verse>()
+                for (i in 0 until versesArray.length()) {
+                    val verseObj = versesArray.getJSONObject(i)
+                    val verseNum = verseObj.optInt("verse", i + 1)
+                    val arabic = verseObj.optString("text", "")
+                    
+                    verses.add(Verse(number = verseNum, arabic = arabic, translation = ""))
                 }
+                versesMap[surahNum] = verses
             }
         } catch (t: Throwable) {
-            android.util.Log.e("QuranData", "Error parsing JSON", t)
+            android.util.Log.e("QuranData", "Error parsing quran.json", t)
         }
 
         return metadata.map { meta ->
