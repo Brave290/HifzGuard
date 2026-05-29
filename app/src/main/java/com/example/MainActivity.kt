@@ -217,7 +217,7 @@ fun MainNavigationScaffold(
             if (result != null) {
                 val latestTag = result.first
                 val rawTag = latestTag.replace("v", "").replace("V", "").trim()
-                val currentVersion = "1.0"
+                val currentVersion = "0.9"
                 if (rawTag.isNotEmpty() && rawTag != currentVersion) {
                     latestVersionName = latestTag
                     updateDownloadUrl = result.second
