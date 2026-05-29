@@ -251,10 +251,14 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
         val isCommittedSessionActive = prefsHelper.committedTargetMinutes > 0
         val isGracePeriodActive = System.currentTimeMillis() < lastCommitTimeMillis + 2000L
         
-        val shouldLock = if (isCommittedSessionActive) {
-            !isAppInForeground && !isEmergencyActive && !isGracePeriodActive && !isTemporaryUnlockActive
+        val shouldLock = if ((isCommittedSessionActive || prefsHelper.dailyGoalMinutes > 0) && !isGoalMet) {
+            val lockStatus = !isAppInForeground && !isEmergencyActive && !isGracePeriodActive && !isTemporaryUnlockActive
+            Log.d(TAG, "Evaluating committed/goal lock: shouldLock=$lockStatus, isAppInForeground=$isAppInForeground, isEmergencyActive=$isEmergencyActive, isGracePeriodActive=$isGracePeriodActive, isTemporaryUnlockActive=$isTemporaryUnlockActive")
+            lockStatus
         } else {
-            baseShouldLock && !isAppInForeground
+            val lockStatus = baseShouldLock && !isAppInForeground
+            Log.d(TAG, "Evaluating base lock: shouldLock=$lockStatus, baseShouldLock=$baseShouldLock, isAppInForeground=$isAppInForeground")
+            lockStatus
         }
 
         withContext(Dispatchers.Main) {
