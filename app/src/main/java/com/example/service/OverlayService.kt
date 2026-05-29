@@ -30,6 +30,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.runtime.Recomposer
+import androidx.compose.ui.platform.AndroidUiDispatcher
 import com.example.ui.theme.HifzGuardTheme
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -250,7 +252,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
         val isGracePeriodActive = System.currentTimeMillis() < lastCommitTimeMillis + 2000L
         
         val shouldLock = if (isCommittedSessionActive) {
-            !isAppInForeground && !isEmergencyActive && !isGracePeriodActive
+            !isAppInForeground && !isEmergencyActive && !isGracePeriodActive && !isTemporaryUnlockActive
         } else {
             baseShouldLock && !isAppInForeground
         }
