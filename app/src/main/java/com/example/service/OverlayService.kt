@@ -221,11 +221,14 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
             sessionDataStore.yesterdayDebtMinutesFlow.first()
         }
 
-        val goalMinutes = prefsHelper.dailyGoalMinutes
+        val goalMinutes = prefsHelper.dailyGoalMinutes + prefsHelper.committedTargetMinutes
         val currentMinutes = seconds / 60
         val remainingGoalMinutes = (goalMinutes - currentMinutes).coerceAtLeast(0)
 
         val isGoalMet = currentMinutes >= goalMinutes
+        if (isGoalMet && prefsHelper.committedTargetMinutes > 0) {
+            prefsHelper.committedTargetMinutes = 0
+        }
 
         // Check if current time is past lock threshold
         val calendar = Calendar.getInstance()
