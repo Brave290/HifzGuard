@@ -217,7 +217,7 @@ fun MainNavigationScaffold(
             if (result != null) {
                 val latestTag = result.first
                 val rawTag = latestTag.replace("v", "").replace("V", "").trim()
-                val currentVersion = "0.9"
+                val currentVersion = "1.0"
                 if (rawTag.isNotEmpty() && rawTag != currentVersion) {
                     latestVersionName = latestTag
                     updateDownloadUrl = result.second
@@ -256,8 +256,12 @@ fun MainNavigationScaffold(
             confirmButton = {
                 Button(
                     onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(updateDownloadUrl))
-                        context.startActivity(intent)
+                        try {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(updateDownloadUrl))
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            android.widget.Toast.makeText(context, "No app available to open the link", android.widget.Toast.LENGTH_LONG).show()
+                        }
                         // Do not dismiss dialog; wait for the new update to be installed (which restarts the app)
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = GoldAccent, contentColor = Color.Black)
