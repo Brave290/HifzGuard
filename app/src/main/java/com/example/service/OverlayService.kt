@@ -221,14 +221,24 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
             sessionDataStore.yesterdayDebtMinutesFlow.first()
         }
 
-        val goalMinutes = prefsHelper.dailyGoalMinutes + prefsHelper.committedTargetMinutes
+        val goalMinutes = if (prefsHelper.committedTargetMinutes > 0) prefsHelper.committedTargetMinutes else prefsHelper.dailyGoalMinutes
         val currentMinutes = seconds / 60
-        val remainingGoalMinutes = (goalMinutes - currentMinutes).coerceAtLeast(0)
-
-        val isGoalMet = currentMinutes >= goalMinutes
-        if (isGoalMet && prefsHelper.committedTargetMinutes > 0) {
+        
+        // If commitment is active, that is the current focus
+        val isGoalMet = currentMinutes >= goalMinutes && goalMinutes > 0
+        val isTimeUp = commitmentEndTimeMillis > 0 && System.currentTimeMillis() >= commitmentEndTimeMillis
+        
+        if ((isGoalMet || isTimeUp) && (prefsHelper.committedTargetMinutes > 0)) {
+            // Commitment met either via recitation or time - grant unlock
+            prefsHelper.temporaryUnlockUntil = System.currentTimeMillis() + (24 * 60 * 60 * 1000)
             prefsHelper.committedTargetMinutes = 0
+            commitmentEndTimeMillis = 0
+            
+            // Send broadcast to close the app if it's in foreground
+            sendBroadcast(Intent(ACTION_CLOSE_APP))
         }
+
+        val remainingGoalMinutes = (goalMinutes - currentMinutes).coerceAtLeast(0)
 
         // Check if current time is past lock threshold
         val calendar = Calendar.getInstance()
@@ -248,13 +258,13 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
         // 1. Goal not met today AND past 8pm (threshold)
         // OR 2. Goal not met today AND carrying debt from yesterday (debt > 0 makes it all-day lock until today's goal is met!)
         val isAppInForeground = com.example.MainActivity.isAppInForeground
-        val baseShouldLock = !isGoalMet && !isEmergencyActive && !isTemporaryUnlockActive && (isPastThreshold || debt > 0)
+        val baseShouldLock = !isGoalMet && !isTimeUp && !isEmergencyActive && !isTemporaryUnlockActive && (isPastThreshold || debt > 0)
         
         // Active committed session rules as user requested: locks user immediately if they leave the app.
-        val isCommittedSessionActive = prefsHelper.committedTargetMinutes > 0
+        val isCommittedActive = prefsHelper.committedTargetMinutes > 0
         val isGracePeriodActive = System.currentTimeMillis() < lastCommitTimeMillis + 2000L
         
-        val shouldLock = if ((isCommittedSessionActive || prefsHelper.dailyGoalMinutes > 0) && !isGoalMet) {
+        val shouldLock = if ((isCommittedActive || prefsHelper.dailyGoalMinutes > 0) && !isGoalMet && !isTimeUp) {
             val lockStatus = !isAppInForeground && !isEmergencyActive && !isGracePeriodActive && !isTemporaryUnlockActive
             Log.d(TAG, "Evaluating committed/goal lock: shouldLock=$lockStatus, isAppInForeground=$isAppInForeground, isEmergencyActive=$isEmergencyActive, isGracePeriodActive=$isGracePeriodActive, isTemporaryUnlockActive=$isTemporaryUnlockActive")
             lockStatus
@@ -447,6 +457,8 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                                                     prefsHelper.dailyGoalMinutes = mins
                                                     // Set last commit time for a transition grace period
                                                     lastCommitTimeMillis = System.currentTimeMillis()
+                                                    // Set commitment end time for device-time based tracking
+                                                    commitmentEndTimeMillis = System.currentTimeMillis() + (mins * 60 * 1000)
                                                     // Give temporary unlock to start reciting
                                                     prefsHelper.temporaryUnlockUntil = System.currentTimeMillis() + (mins * 60 * 1000)
                                                     
@@ -530,7 +542,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                 }
             }
         }
-    }
+        }
 
         try {
             windowManager.addView(overlayView, layoutParams)
@@ -600,15 +612,17 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
         super.onDestroy()
     }
 
+    override fun onBind(intent: Intent?): IBinder? {
+        return null
+    }
+
     companion object {
         const val ACTION_APP_FOREGROUND = "com.example.action.APP_FOREGROUND"
         const val ACTION_APP_BACKGROUND = "com.example.action.APP_BACKGROUND"
         const val ACTION_FORCE_UNLOCK = "com.example.action.FORCE_UNLOCK"
+        const val ACTION_CLOSE_APP = "com.example.action.CLOSE_APP"
         var lastCommitTimeMillis: Long = 0L
-    }
-
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
+        var commitmentEndTimeMillis: Long = 0L
     }
 
     // Standard low-dependency custom builder for notification to remain resilient

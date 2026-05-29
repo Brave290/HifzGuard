@@ -333,12 +333,18 @@ class HifzViewModel(
     private fun startSessionTimer() {
         sessionTimerJob?.cancel()
         sessionTimerJob = viewModelScope.launch {
+            var lastTick = System.currentTimeMillis()
             while (_isSessionActive.value) {
                 delay(1000)
-                sessionDataStore.incrementAccumulatedSeconds(1)
-                _sessionElapsedSeconds.value += 1
+                val now = System.currentTimeMillis()
+                val deltaSeconds = ((now - lastTick) / 1000).toInt()
+                if (deltaSeconds > 0) {
+                    sessionDataStore.incrementAccumulatedSeconds(deltaSeconds)
+                    _sessionElapsedSeconds.value += deltaSeconds
+                    lastTick = now
+                }
 
-                val elapsedSec = accumulatedSeconds.value
+                val elapsedSec = _sessionElapsedSeconds.value
                 val minElapsed = elapsedSec / 60
 
                 // Check committed target
@@ -354,7 +360,13 @@ class HifzViewModel(
                     prefsHelper.committedTargetMinutes = 0
                     committedTargetMinutes.value = 0
                     
+                    // 4. Send broadcast to close app
+                    context.sendBroadcast(Intent(OverlayService.ACTION_CLOSE_APP))
+                    
                     Log.i(TAG, "Committed session timer reached! Playing alarm and auto-unlocking overlay.")
+                    
+                    // Stop session automatically as requested
+                    pauseSession()
                 }
 
                 // Track the manual reminder limit (user must tap interactive confirm button every 10 mins)
@@ -431,7 +443,7 @@ class HifzViewModel(
 
     fun hideLockOverlay() {
         val intent = Intent(context, OverlayService::class.java).apply {
-            action = OverlayService.ACTION_FORCE_UNLOCK
+            action = com.example.service.OverlayService.ACTION_FORCE_UNLOCK
         }
         context.startService(intent)
     }

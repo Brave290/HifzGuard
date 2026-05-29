@@ -267,22 +267,6 @@ abstract class DownloadQuranTask : DefaultTask() {
     }
 }
 
-tasks.register("generateLargeAsset") {
-    val assetsDir = file("src/main/assets")
-    val largeFile = File(assetsDir, "large_asset_20mb.bin")
-    doLast {
-        if (!largeFile.exists()) {
-            assetsDir.mkdirs()
-            largeFile.writeBytes(ByteArray(20 * 1024 * 1024))
-            println("=== GENERATED LARGE ASSET OF 20MB ===")
-        }
-    }
-}
-
-tasks.matching { it.name == "preBuild" }.all {
-    dependsOn("generateLargeAsset")
-}
-
 tasks.register<DownloadQuranTask>("downloadQuranJson") {
     outputFile.set(layout.projectDirectory.file("src/main/assets/quran.json"))
     outputTranslationFile.set(layout.projectDirectory.file("src/main/assets/translation_en.json"))

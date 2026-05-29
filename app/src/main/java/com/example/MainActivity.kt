@@ -81,13 +81,13 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         isAppInForeground = true
-        safeStartOverlayService(OverlayService.ACTION_APP_FOREGROUND)
+        safeStartOverlayService(com.example.service.OverlayService.ACTION_APP_FOREGROUND)
     }
 
     override fun onPause() {
         super.onPause()
         isAppInForeground = false
-        safeStartOverlayService(OverlayService.ACTION_APP_BACKGROUND)
+        safeStartOverlayService(com.example.service.OverlayService.ACTION_APP_BACKGROUND)
     }
 
     private lateinit var viewModel: HifzViewModel
@@ -104,8 +104,35 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val closeAppReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: android.content.Context?, intent: android.content.Intent?) {
+            if (intent?.action == com.example.service.OverlayService.ACTION_CLOSE_APP) {
+                Log.d("MainActivity", "Closing app due to session completion")
+                finishAffinity()
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        try {
+            unregisterReceiver(closeAppReceiver)
+        } catch (e: Exception) {
+            // ignore
+        }
+        super.onDestroy()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Register close app receiver
+        val filter = android.content.IntentFilter(com.example.service.OverlayService.ACTION_CLOSE_APP)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(closeAppReceiver, filter, android.content.Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(closeAppReceiver, filter)
+        }
         
         // Anti-Tampering Layer E: Screenshot & screen record prevention (Disabled in emulator-preview to prevent canvas blacking out)
         /*
