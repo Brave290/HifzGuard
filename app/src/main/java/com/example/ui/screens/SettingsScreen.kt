@@ -273,9 +273,9 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {
-                        // Triggers a 100-minute lock immediately by tricking it into a committed session
-                        viewModel.setCommittedTargetMinutes(100)
-                        android.widget.Toast.makeText(context, "Lock activated! Go to your home screen to see it.", android.widget.Toast.LENGTH_LONG).show()
+                        // Triggers a 1-minute lock immediately by tricking it into a committed session
+                        viewModel.setCommittedTargetMinutes(1)
+                        android.widget.Toast.makeText(context, "Lock activated (1 Min)! Go to your home screen to see it.", android.widget.Toast.LENGTH_LONG).show()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC0392B), contentColor = Color.White),
                     modifier = Modifier.fillMaxWidth().height(50.dp),

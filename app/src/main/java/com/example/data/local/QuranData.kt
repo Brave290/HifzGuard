@@ -22,27 +22,63 @@ object QuranData {
             val inputStream = context.assets.open("translation_en.json")
             val reader = android.util.JsonReader(java.io.InputStreamReader(inputStream, "UTF-8"))
             reader.isLenient = true
-            reader.beginArray()
-            while (reader.hasNext()) {
-                var surahNum = -1
-                var verseNum = -1
-                var translation = ""
+            
+            // Peak at the first token to see if it's an array or object
+            val firstToken = reader.peek()
+            if (firstToken == android.util.JsonToken.BEGIN_OBJECT) {
+                // Fawazahmed0 format: { "quran": [ { "chapter": 1, "verse": 1, "text": "..." } ] }
                 reader.beginObject()
                 while (reader.hasNext()) {
                     val name = reader.nextName()
-                    when (name) {
-                        "surah_number" -> surahNum = reader.nextInt()
-                        "verse_number" -> verseNum = reader.nextInt()
-                        "translation" -> translation = reader.nextString()
-                        else -> reader.skipValue()
+                    if (name == "quran") {
+                        reader.beginArray()
+                        while (reader.hasNext()) {
+                            var surahNum = -1
+                            var verseNum = -1
+                            var translation = ""
+                            reader.beginObject()
+                            while (reader.hasNext()) {
+                                when (reader.nextName()) {
+                                    "chapter", "surah_number" -> surahNum = reader.nextInt()
+                                    "verse", "verse_number" -> verseNum = reader.nextInt()
+                                    "text", "translation" -> translation = reader.nextString()
+                                    else -> reader.skipValue()
+                                }
+                            }
+                            reader.endObject()
+                            if (surahNum != -1 && verseNum != -1) {
+                                translationMap["${surahNum}_${verseNum}"] = translation
+                            }
+                        }
+                        reader.endArray()
+                    } else {
+                        reader.skipValue()
                     }
                 }
                 reader.endObject()
-                if (surahNum != -1 && verseNum != -1) {
-                    translationMap["${surahNum}_${verseNum}"] = translation
+            } else if (firstToken == android.util.JsonToken.BEGIN_ARRAY) {
+                // quran-json format: [ { "surah_number": 1, "verse_number": 1, "translation": "..." } ]
+                reader.beginArray()
+                while (reader.hasNext()) {
+                    var surahNum = -1
+                    var verseNum = -1
+                    var translation = ""
+                    reader.beginObject()
+                    while (reader.hasNext()) {
+                        when (reader.nextName()) {
+                            "surah_number", "chapter" -> surahNum = reader.nextInt()
+                            "verse_number", "verse" -> verseNum = reader.nextInt()
+                            "translation", "text" -> translation = reader.nextString()
+                            else -> reader.skipValue()
+                        }
+                    }
+                    reader.endObject()
+                    if (surahNum != -1 && verseNum != -1) {
+                        translationMap["${surahNum}_${verseNum}"] = translation
+                    }
                 }
+                reader.endArray()
             }
-            reader.endArray()
             reader.close()
             android.util.Log.d("QuranData", "Translation map size: ${translationMap.size}")
         } catch (t: Throwable) {

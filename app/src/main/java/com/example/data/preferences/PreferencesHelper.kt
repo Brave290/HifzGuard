@@ -104,6 +104,7 @@ class PreferencesHelper(private val context: Context) {
 
     fun triggerEmergencyOverride() {
         emergencyOverrideUntil = System.currentTimeMillis() + (30 * 60 * 1000) // 30 mins
+        committedTargetMinutes = 0 // Also clear any stuck committed target
     }
 
     fun registerListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {

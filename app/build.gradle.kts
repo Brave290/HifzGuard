@@ -204,10 +204,10 @@ abstract class DownloadQuranTask : DefaultTask() {
         } else {
             println("=== DOWNLOADING AUTHENTIC QURAN ENGLISH TRANSLATION ===")
             val urls = listOf(
-                "https://unpkg.com/quran-json@1.0.1/json/quran/en.json",
-                "https://cdn.jsdelivr.net/npm/quran-json@1.0.1/json/quran/en.json",
                 "https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/editions/eng-yusufali.json",
-                "https://raw.githubusercontent.com/fawazahmed0/quran-api/main/editions/eng-yusufali.json"
+                "https://raw.githubusercontent.com/fawazahmed0/quran-api/main/editions/eng-yusufali.json",
+                "https://unpkg.com/quran-json@1.0.1/json/quran/en.json",
+                "https://cdn.jsdelivr.net/npm/quran-json@1.0.1/json/quran/en.json"
             )
             downloadFileWithFallback(urls, targetTransFile)
         }

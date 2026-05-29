@@ -458,16 +458,12 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
 
                         Button(
                             onClick = {
-                                if (!isCommittedActive) {
-                                    launchMainApp()
-                                }
+                                launchMainApp()
                             },
-                            enabled = !isCommittedActive,
+                            enabled = true,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isCommittedActive) Color.DarkGray else Color(0xFF0D5E3A),
-                                contentColor = if (isCommittedActive) Color.Gray else Color.White,
-                                disabledContainerColor = Color(0x33FFFFFF),
-                                disabledContentColor = Color.White.copy(alpha = 0.4f)
+                                containerColor = Color(0xFF0D5E3A),
+                                contentColor = Color.White
                             ),
                             shape = RoundedCornerShape(24.dp),
                             modifier = Modifier
@@ -475,7 +471,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                                 .height(52.dp)
                                 .border(
                                     width = 1.dp,
-                                    color = if (isCommittedActive) Color.Gray.copy(alpha = 0.3f) else Color(0xFFD4AF37),
+                                    color = Color(0xFFD4AF37),
                                     shape = RoundedCornerShape(24.dp)
                                 )
                         ) {
@@ -490,7 +486,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = if (isCommittedActive) "LOCKED UNTIL TIMER EXPIRES" else "OPEN HIFZGUARD",
+                                    text = if (isCommittedActive) "RETURN TO HIFZGUARD" else "OPEN HIFZGUARD",
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.5.sp,
                                     fontSize = 11.sp
