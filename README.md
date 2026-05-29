@@ -1,49 +1,21 @@
-# HifzGuard 🛡️📖
-> A Cinematic, Premium, and Secure Digital Sanctuary for Quran Memorization & consistent spiritual focus.
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
+</div>
 
-**HifzGuard** is a beautifully crafted Android application built using Jetpack Compose and Material Design 3. It prioritizes your daily spiritual connection to the Holy Quran by tracking your recitation sessions, providing an interactive memorization matrix, and locking down your phone from digital distractions once your daily goals are not met.
+# Run and deploy your AI Studio app
 
----
+This contains everything you need to run your app locally.
 
-## 🚀 Instant Download (Pre-built APK)
-For convenience, a fully working compiled Android installation archive is prepared and placed directly in the repository explorer. You can download it directly using any of these links:
+View your app in AI Studio: https://ai.studio/apps/657ae2ef-8e74-476c-bb08-e78f98cff74c
 
-* 📥 **[Direct Download: HifzGuard APK](https://github.com/Brave290/HifzGuard/raw/main/.build-outputs/app-debug.apk)**
-* 📦 **[Alternative Download: HifzGuard APK](https://github.com/Brave290/HifzGuard/raw/main/app-debug.apk)**
+## Run Locally
 
-If you are using the **Google AI Studio IDE**, you can simply download the APK file by:
-1. Locating `app-debug.apk` at the root of the file explorer on the left sidebar.
-2. Clicking the **three dots (options menu)** next to `app-debug.apk` or right-clicking it.
-3. Selecting **Download** to save it locally on your computer!
+**Prerequisites:**  [Android Studio](https://developer.android.com/studio)
 
-Or via the top/platform settings menu:
-- You can generate and download APKs/AABs or export the entire project as a ZIP via the **settings menu** in the top-right corner of the interface.
 
----
-
-## ✨ Features Checklist
-- [x] **Cinematic Dashboard**: Dark luxury theme featuring consistent stats, streak highlights, and modern interactive elements.
-- [x] **Adaptive Juz Progress Grid**: Custom 30-Juz matrix to cycle statuses (Gray/Unsaved -> Orange/In-Progress -> Green/Memorized) and log personal milestones.
-- [x] **Voice-Tracked Reading Session**: Utilizes the microphone to detect voice amplitude and wave frequencies in real-time, pausing automatically on silent inactivity.
-- [x] **Authentic Full Offline Quran**: Integrated complete **114 Quran Chapters** (Surahs) with exact verse-by-verse original Arabic script and English translations side-by-side parsed dynamically from local assets. No mock data, no placeholder verses.
-- [x] **Configuration-Cache Direct Assets Download**: Built a robust Gradle download pipeline hooked into the compile lifecycle (`preBuild`), which successfully downloads the complete scripture JSON on compile time (safely fallback-guaranteed).
-- [x] **Timer Settings Automatic Sync**: Selecting a recitation commitment session duration (e.g., 5 minutes) anywhere in the app or the lock overlay instantly updates the system preferences.
-- [x] **Inter-Process SharedPreferences Observers**: Introduced a reactive preference observer in `HifzViewModel` and `OverlayService`. Any setting changes instantly propagate across screens in real-time!
-- [x] **Dedicated Overlay Lock Screen**: Starting a committed session blocks you from leaving HifzGuard. Leaving the app triggers the focus overlay, covering the screen and reminding you of your focus. Once the selected session timer expires, the overlay dismisses itself automatically and instantly!
-- [x] **SYSTEM_ALERT_WINDOW Safety Checks**: Added critical pre-execution overlay checks ensuring safety on different Android API versions if the overlay draw-permission is not granted.
-- [x] **Spiritual Overlay Blocker**: Draw-over-other-apps lock screen that shields your focus from social media once locking hours are reached on uncompleted goals.
-- [x] **Foreground Smart Bypass**: Solves lockscreen deadlocks by automatically hiding the block overlay when HifzGuard itself is in the foreground, allowing uninterrupted recitation.
-- [x] **Emergency 30M Override**: Keeps life-essential operations reachable through safety bypass tags.
-- [x] **Anti-Tamper & Security Verifications**: Integrated signature verifications, custom obfuscation frameworks, and security alerts.
-
----
-
-## 🛠️ Performance & Display Optimizations
-To resolve the slow loading, startup failures, and permission crashes, the following critical fixes have been integrated:
-1. **Window Manager BadTokenException Fix**: Added a secure runtime `Settings.canDrawOverlays(this)` condition inside `OverlayService.kt` to prevent runtime crashes when attempting to render window type `2038` without granted layout-draw privileges.
-2. **Disabled Screen Blocker (FLAG_SECURE) for Previews**: Safe rendering inside browser-based streaming emulators by handling preview canvas layers gracefully.
-3. **Offloaded DB Initialization to Dispatchers.IO**: Shifted startup database preparations and DataStore tasks out of the main thread in `HifzGuardApplication`. This eliminates cold launch wait times and prevents Android Not Responding (ANR) flags.
-4. **Optimized Shared Preferences**: Handled Keystore decryption exceptions gracefully so the app auto-recovers into high-speed standard properties under standard debug setups.
-
----
-*Made with 🤍 by Akanji Mus'ab*
+1. Open Android Studio
+2. Select **Open** and choose the directory containing this project
+3. Allow Android Studio to fix any incompatibilities as it imports the project.
+4. Create a file named `.env` in the project directory and set `GEMINI_API_KEY` in that file to your Gemini API key (see `.env.example` for an example)
+5. Remove this line from the app's `build.gradle.kts` file: `signingConfig = signingConfigs.getByName("debugConfig")`
+6. Run the app on an emulator or physical device
