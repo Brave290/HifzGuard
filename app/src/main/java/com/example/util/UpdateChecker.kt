@@ -84,8 +84,6 @@ object UpdateChecker {
                     val tagName = json.optString("version", "")
                     val downloadUrl = json.optString("download_url", "https://github.com/Brave290/HifzGuard/raw/main/.build-outputs/app-debug.apk")
                     return@withContext Pair(tagName, downloadUrl)
-                } else {
-                    return@withContext Pair("2.0", "https://github.com/Brave290/HifzGuard/raw/main/.build-outputs/app-debug.apk")
                 }
                 rawConn.disconnect()
             } else {
