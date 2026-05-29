@@ -1,7 +1,7 @@
 package com.example.util
 
 object Constants {
-    const val APP_DOWNLOAD_URL = "https://your-repository-link.com/hifzguard"
+    const val APP_DOWNLOAD_URL = "https://github.com/Brave290/HifzGuard/raw/main/.build-outputs/app-debug.apk"
     const val APP_NAME = "HifzGuard"
     const val DEVELOPER_NAME = "Akanji Mus'ab"
     const val DEFAULT_GOAL_MINUTES = 60
