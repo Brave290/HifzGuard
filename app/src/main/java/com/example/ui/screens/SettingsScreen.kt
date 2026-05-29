@@ -18,7 +18,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
@@ -351,7 +351,7 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        Icon(imageVector = Icons.Default.Send, contentDescription = "Test WhatsApp Send", modifier = Modifier.size(16.dp))
+                        Icon(imageVector = Icons.AutoMirrored.Filled.Send, contentDescription = "Test WhatsApp Send", modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("TEST WHATSAPP TRIGGER NOW", fontWeight = FontWeight.Bold)
                     }

@@ -78,14 +78,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
+    override fun onResume() {
+        super.onResume()
         isAppInForeground = true
         safeStartOverlayService(OverlayService.ACTION_APP_FOREGROUND)
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onPause() {
+        super.onPause()
         isAppInForeground = false
         safeStartOverlayService(OverlayService.ACTION_APP_BACKGROUND)
     }

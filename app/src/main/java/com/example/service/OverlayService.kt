@@ -19,9 +19,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +44,7 @@ import com.example.MainActivity
 import com.example.data.preferences.PreferencesHelper
 import com.example.data.preferences.SessionDataStore
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import java.util.*
@@ -197,11 +199,11 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
             }
         }
 
-        // Periodic clock evaluator (runs every 10 seconds to verify lock hours)
+        // Periodic clock evaluator (runs every 1 second to quickly verify lock hours)
         serviceScope.launch {
             while (isActive) {
                 evaluateOverlayState()
-                delay(10000)
+                delay(1000)
             }
         }
     }
@@ -262,16 +264,19 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
         }
     }
 
+    private val overlayRemainingMinutes = MutableStateFlow(0)
+
     @SuppressLint("InflateParams")
     private fun showLockOverlay(remainingMinutes: Int) {
+        overlayRemainingMinutes.value = remainingMinutes
+
         if (!android.provider.Settings.canDrawOverlays(this)) {
             Log.w(TAG, "Cannot show lock overlay: SYSTEM_ALERT_WINDOW permission is not granted.")
             return
         }
 
         if (isOverlayAttached && overlayView != null) {
-            // Already attached, update content dynamically if needed.
-            // Under compose, updating state triggers recomposition automatically.
+            // Already attached, state is updated via MutableStateFlow.
             return
         }
 
@@ -301,6 +306,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
             setViewTreeSavedStateRegistryOwner(this@OverlayService)
 
             setContent {
+                val currentRemainingMinutes by overlayRemainingMinutes.collectAsState()
                 HifzGuardTheme {
                     Box(
                     modifier = Modifier
@@ -331,7 +337,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                                 .border(1.5.dp, Color(0xFFD4AF37), CircleShape)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.MenuBook,
+                                imageVector = Icons.AutoMirrored.Filled.MenuBook,
                                 contentDescription = "Quran",
                                 tint = Color(0xFFD4AF37),
                                 modifier = Modifier.size(56.dp)
@@ -378,7 +384,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = "$remainingMinutes Minutes",
+                                    text = "$currentRemainingMinutes Minutes",
                                     style = MaterialTheme.typography.headlineMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White
@@ -545,6 +551,26 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
         startActivity(launchIntent)
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        Log.d(TAG, "Task removed, restarting service to prevent bypass")
+        val restartServiceIntent = Intent(applicationContext, OverlayService::class.java).apply {
+            setPackage(packageName)
+        }
+        val restartServicePendingIntent = PendingIntent.getService(
+            applicationContext,
+            1,
+            restartServiceIntent,
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val alarmService = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmService.set(
+            AlarmManager.ELAPSED_REALTIME,
+            android.os.SystemClock.elapsedRealtime() + 1000,
+            restartServicePendingIntent
+        )
     }
 
     override fun onDestroy() {
