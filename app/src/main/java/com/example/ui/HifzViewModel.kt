@@ -82,6 +82,7 @@ class HifzViewModel(
     private var sessionTimerJob: Job? = null
     private var voicePollingJob: Job? = null
     private var lastActivityTimeMillis = System.currentTimeMillis()
+    private var isGoalCompletedTriggered = false
     private val _lastManualConfirmationMinutes = MutableStateFlow(0)
     val lastManualConfirmationMinutes: StateFlow<Int> = _lastManualConfirmationMinutes.asStateFlow()
 
@@ -287,6 +288,7 @@ class HifzViewModel(
         _sessionElapsedSeconds.value = 0 // Reset elapsed count for the current session
         lastActivityTimeMillis = System.currentTimeMillis()
         _lastManualConfirmationMinutes.value = 0
+        isGoalCompletedTriggered = false
 
         // Start counting minutes/seconds
         startSessionTimer()
@@ -343,7 +345,9 @@ class HifzViewModel(
                 val isGoalCompleted = (targetMinutes > 0 && (elapsedSec >= targetMinutes * 60 || isCommitmentTimeUp)) ||
                                      (targetMinutes <= 0 && dailyGoalMin > 0 && totalAccumulatedMin >= dailyGoalMin)
 
-                if (isGoalCompleted) {
+                if (isGoalCompleted && !isGoalCompletedTriggered) {
+                    isGoalCompletedTriggered = true
+                    
                     // 1. Play the alarm sound!
                     playAlarmSound()
                     
@@ -360,10 +364,7 @@ class HifzViewModel(
                     // 4. Send broadcast to close app
                     context.sendBroadcast(Intent(OverlayService.ACTION_CLOSE_APP))
                     
-                    Log.i(TAG, "Goal completion reached! Playing alarm and auto-unlocking overlay.")
-                    
-                    // Stop session automatically as requested
-                    pauseSession()
+                    Log.i(TAG, "Goal completion reached! Playing alarm.")
                 }
 
                 // Track the manual reminder limit (user must tap interactive confirm button every 10 mins)
