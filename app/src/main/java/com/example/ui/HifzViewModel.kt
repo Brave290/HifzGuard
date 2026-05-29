@@ -347,8 +347,8 @@ class HifzViewModel(
                     // 1. Play the alarm sound!
                     playAlarmSound()
                     
-                    // 2. Set permanent daily auto-unlock bypass
-                    prefsHelper.temporaryUnlockUntil = System.currentTimeMillis() + (24 * 60 * 60 * 1000)
+                    // 2. No automatic bypass
+                    prefsHelper.temporaryUnlockUntil = 0L
                     
                     // 3. Reset target if active
                     if (targetMinutes > 0) {

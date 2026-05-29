@@ -230,7 +230,7 @@ class OverlayService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStat
         
         if (isGoalMet || isTimeUp) {
             // Goal met either via recitation or time - grant unlock
-            prefsHelper.temporaryUnlockUntil = System.currentTimeMillis() + (24 * 60 * 60 * 1000)
+            prefsHelper.temporaryUnlockUntil = 0L
             
             if (prefsHelper.committedTargetMinutes > 0) {
                 prefsHelper.committedTargetMinutes = 0
