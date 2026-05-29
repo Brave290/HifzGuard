@@ -269,20 +269,6 @@ fun SettingsScreen(
                         )
                     )
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = {
-                        // Triggers a 1-minute lock immediately by tricking it into a committed session
-                        viewModel.setCommittedTargetMinutes(1)
-                        android.widget.Toast.makeText(context, "Lock activated (1 Min)! Go to your home screen to see it.", android.widget.Toast.LENGTH_LONG).show()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC0392B), contentColor = Color.White),
-                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("TEST LOCK SCREEN NOW", fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                }
             }
         }
 
