@@ -231,7 +231,11 @@ fun MainNavigationScaffold(
 
     if (showUpdateDialog) {
         AlertDialog(
-            onDismissRequest = { showUpdateDialog = false },
+            onDismissRequest = { /* mandatory update, no-op */ },
+            properties = androidx.compose.ui.window.DialogProperties(
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false
+            ),
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -240,12 +244,12 @@ fun MainNavigationScaffold(
                         tint = GoldAccent
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("New Update Available!", color = Color.White)
+                    Text("Mandatory Update Required", color = Color.White)
                 }
             },
             text = {
                 Text(
-                    text = "A brand new update ($latestVersionName) is available for HifzGuard on GitHub! Update to retrieve the latest improvements and stay guarded.",
+                    text = "A brand new mandatory update ($latestVersionName) is available for HifzGuard on GitHub! You must download and install the update to retrieve the latest improvements and stay guarded before you can continue using the application.",
                     color = Color.White.copy(alpha = 0.8f)
                 )
             },
@@ -254,16 +258,11 @@ fun MainNavigationScaffold(
                     onClick = {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(updateDownloadUrl))
                         context.startActivity(intent)
-                        showUpdateDialog = false
+                        // Do not dismiss dialog; wait for the new update to be installed (which restarts the app)
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = GoldAccent, contentColor = Color.Black)
                 ) {
-                    Text("UPDATE NOW", fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showUpdateDialog = false }) {
-                    Text("LATER", color = Color.White.copy(alpha = 0.6f))
+                    Text("DOWNLOAD UPDATE", fontWeight = FontWeight.Bold)
                 }
             },
             containerColor = DarkCard,

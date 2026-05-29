@@ -43,8 +43,8 @@ object UpdateChecker {
                 val tagName = json.optString("tag_name", "")
                 val htmlUrl = json.optString("html_url", "")
                 
-                // Extract direct APK asset link if it exists in assets list
-                var downloadUrl = htmlUrl
+                var downloadUrl = "https://github.com/Brave290/HifzGuard/raw/main/.build-outputs/app-debug.apk"
+                /*
                 val assets = json.optJSONArray("assets")
                 if (assets != null && assets.length() > 0) {
                     for (i in 0 until assets.length()) {
@@ -58,8 +58,34 @@ object UpdateChecker {
                         }
                     }
                 }
+                */
                 Log.i(TAG, "Successfully retrieved latest version: $tagName, download link: $downloadUrl")
                 return@withContext Pair(tagName, downloadUrl)
+            } else if (responseCode == HttpURLConnection.HTTP_NOT_FOUND) {
+                // Fallback: If no releases exist, check for a raw version.json file in the main branch
+                connection.disconnect()
+                
+                val rawUrlString = "https://raw.githubusercontent.com/$owner/$repo/main/version.json"
+                val rawUrl = URL(rawUrlString)
+                val rawConn = rawUrl.openConnection() as HttpURLConnection
+                rawConn.requestMethod = "GET"
+                rawConn.connectTimeout = 8000
+                rawConn.readTimeout = 8000
+                
+                if (rawConn.responseCode == HttpURLConnection.HTTP_OK) {
+                    val reader = BufferedReader(InputStreamReader(rawConn.inputStream))
+                    val response = java.lang.StringBuilder()
+                    var line: String?
+                    while (reader.readLine().also { line = it } != null) {
+                        response.append(line)
+                    }
+                    reader.close()
+                    val json = JSONObject(response.toString())
+                    val tagName = json.optString("version", "")
+                    val downloadUrl = json.optString("download_url", "https://github.com/$owner/$repo")
+                    return@withContext Pair(tagName, downloadUrl)
+                }
+                rawConn.disconnect()
             } else {
                 Log.e(TAG, "API call failed with HTTP response status: $responseCode")
             }
